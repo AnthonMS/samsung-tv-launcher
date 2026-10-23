@@ -206,3 +206,7 @@ are tagged `[homekey]`.
 - [levkropp/samsung-tv-root-untethered](https://github.com/levkropp/samsung-tv-root-untethered) for root on the TV.
 - [splitcipher/couchroot](https://github.com/splitcipher/couchroot), [CleanFrame](https://github.com/nthnclrk/CleanFrame)
   and [arn0-tv](https://github.com/NelsonEU/arn0-tv) for documenting the native Home assignment.
+
+## License
+
+MIT, see `LICENSE`. The root toolkit and the reference projects above have their own licenses.
