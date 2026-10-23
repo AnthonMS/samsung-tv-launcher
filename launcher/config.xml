@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="http://mlgaard.dk/tvlauncher" version="1.7.1" viewmodes="maximized">
+    <tizen:application id="HDvLaunchr.Home" package="HDvLaunchr" required_version="6.0"/>
+    <tizen:profile name="tv-samsung"/>
+    <name>Launcher</name>
+    <icon src="icon.png"/>
+    <content src="index.html"/>
+    <access origin="*" subdomains="true"/>
+    <tizen:allow-navigation>*</tizen:allow-navigation>
+    <tizen:content-security-policy>default-src 'self' http: https: data: blob: file:; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src * data: blob: file:; media-src * blob:; connect-src *;</tizen:content-security-policy>
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
+    <tizen:privilege name="http://tizen.org/privilege/application.info"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <!-- Lets the TV start the app in the background at power-on so opening it is faster (as arn0-tv) -->
+    <tizen:metadata key="http://samsung.com/tv/metadata/prelaunch.support" value="true"/>
+    <!-- background-support off, as CleanFrame and arn0-tv: the TV pauses the page while it's hidden -->
+    <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
+</widget>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>Launcher</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <div id="clock"></div>
+</header>
+<main id="home">
+  <div id="rows">
+    <section class="row" id="sec-resume">
+      <h2>Continue watching</h2>
+      <div class="viewport big"><div class="track" id="resume"></div></div>
+    </section>
+    <section class="row" id="sec-youtube" hidden>
+      <h2>YouTube</h2>
+      <div class="viewport"><div class="track" id="youtube"></div></div>
+    </section>
+    <section class="row" id="sec-apps">
+      <h2>Apps</h2>
+      <div class="viewport"><div class="track" id="apps"></div></div>
+    </section>
+    <section class="row" id="sec-live">
+      <h2>Live TV</h2>
+      <div class="viewport"><div class="track" id="live"></div></div>
+    </section>
+  </div>
+</main>
+<div id="gear" class="tile round"></div>
+<div id="banner" hidden></div>
+<div id="panel" hidden>
+  <h3></h3>
+  <div class="list"><div class="items"></div></div>
+  <div class="hint"></div>
+</div>
+<video id="player" hidden></video>
+<div id="osd" hidden></div>
+<div id="modal" hidden></div>
+<div id="toast" hidden></div>
+<pre id="debug" hidden></pre>
+<script src="js/appids.js"></script>
+<script src="js/jellyfin.js"></script>
+<script src="js/youtube-client.js"></script>
+<script src="js/youtube.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

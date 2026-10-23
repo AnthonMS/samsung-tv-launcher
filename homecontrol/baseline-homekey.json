@@ -1,0 +1,10 @@
+{
+  "Home": "HDvLaunchr.Home",
+  "Strings": {
+    "db/appfw/home_appid": "HDvLaunchr.Home",
+    "db/appfw/startup_appid": "HDvLaunchr.Home",
+    "db/appfw/booting_appid_backup": "HDvLaunchr.Home",
+    "db/first_screen/type": "HDvLaunchr.Home"
+  },
+  "Autostart": 1
+}

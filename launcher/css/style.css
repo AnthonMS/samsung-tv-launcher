@@ -1,0 +1,324 @@
+/* 1920x1080 TV canvas. Only transform and opacity animate, to stay smooth on the TV. */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+html, body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  color: #f2f4f8;
+  font-family: "SamsungOne", "Tizen Sans", sans-serif;
+}
+
+body {
+  background: radial-gradient(1600px 900px at 75% -20%, #2b3a5c 0%, #141a28 45%, #0a0c12 100%);
+}
+
+header {
+  height: 120px;
+  padding: 48px 104px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+#clock { font-size: 38px; font-weight: 300; color: rgba(255, 255, 255, 0.75); }
+
+/* Rows scroll up and down as a whole so the focused row stays on screen */
+#home { position: absolute; top: 120px; left: 0; right: 0; bottom: 0; overflow: hidden; }
+/* will-change keeps the scrolling layers on the GPU, so moving them never repaints */
+#rows { transition: transform 180ms ease-out; will-change: transform; }
+
+.row { padding: 0 104px; margin-bottom: 4px; }
+
+.row h2 {
+  font-size: 28px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Bottom padding leaves room for the caption under the focused tile */
+.viewport { overflow: hidden; padding: 24px 20px 66px; margin: 0 -20px; }
+
+.track {
+  display: flex;
+  gap: 26px;
+  transition: transform 160ms ease-out;
+  will-change: transform;
+}
+
+/* ---- Tiles */
+
+.tile {
+  flex: 0 0 auto;
+  width: 224px;
+  height: 126px;
+  border-radius: 18px;
+  position: relative;
+  transition: transform 120ms ease-out;
+}
+
+.tile .face {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Glass: bright top edge, soft highlight on the upper half, a little darker at the bottom */
+.tile .gloss {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.34) 0%,
+    rgba(255, 255, 255, 0.10) 44%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.16) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+/* Soft shadow under the lifted tile, a gradient rather than a blur so it stays cheap */
+.tile::before {
+  content: '';
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -24px;
+  height: 38px;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.62) 0%, rgba(0, 0, 0, 0) 70%);
+  opacity: 0;
+}
+
+.tile.focused { transform: scale(1.12) translateY(-6px); z-index: 2; }
+.tile.focused::before { opacity: 1; }
+
+.tile .caption {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: -30px;
+  right: -30px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transition: opacity 100ms;
+}
+.tile.focused .caption { opacity: 1; }
+
+/* Arrange mode: the picked-up tile gets a pulsing blue ring */
+.tile::after {
+  content: '';
+  position: absolute;
+  top: -8px; right: -8px; bottom: -8px; left: -8px;
+  border: 4px solid #5ac8fa;
+  border-radius: 25px;
+  opacity: 0;
+}
+.tile.picked::after { animation: pulse 800ms ease-in-out infinite alternate; }
+@keyframes pulse { from { opacity: 0.35; } to { opacity: 1; } }
+
+/* Continue watching: big artwork tiles with title, episode and progress on the image */
+.viewport.big { padding-bottom: 34px; }
+.tile.big { width: 480px; height: 270px; }
+.tile.big.focused { transform: scale(1.07) translateY(-6px); }
+.tile.big .face { background: #1a1f2b; align-items: flex-end; justify-content: flex-start; }
+.tile.big .art { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+.tile.big .shade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 62%;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.82) 100%);
+}
+.tile.big .info { position: relative; width: 100%; padding: 0 22px 22px; }
+.tile.big .title { font-size: 30px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile.big .sub {
+  margin-top: 4px; font-size: 22px; color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tile.big .meta { display: flex; align-items: center; gap: 14px; margin-top: 12px; font-size: 19px; color: rgba(255, 255, 255, 0.75); }
+.tile.big .bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.25); overflow: hidden; }
+.tile.big .bar span { display: block; height: 100%; background: #ffffff; }
+.tile.big .badge {
+  padding: 3px 10px; border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9); color: #0b0d12; font-size: 17px; font-weight: 600;
+}
+.tile.big.action .face { align-items: center; justify-content: center; }
+.tile.big .caption { display: none; }
+
+/* YouTube: thumbnail tiles with title and channel on the image */
+.tile.video { width: 352px; height: 198px; }
+.tile.video.focused { transform: scale(1.08) translateY(-6px); }
+.tile.video .face { background: #1a1f2b; align-items: flex-end; justify-content: flex-start; }
+.tile.video .art { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+.tile.video .shade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 70%;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.85) 100%);
+}
+.tile.video .info { position: relative; width: 100%; padding: 0 16px 14px; }
+.tile.video .title {
+  font-size: 21px; font-weight: 600; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tile.video .sub { margin-top: 4px; font-size: 17px; color: rgba(255, 255, 255, 0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile.video .dur {
+  position: absolute; top: 10px; right: 10px;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.75); font-size: 17px; font-weight: 600;
+}
+.tile.video.action .face { align-items: center; justify-content: center; }
+.tile.video .caption { display: none; }
+#modal .url { font-size: 64px; font-weight: 600; margin: 12px 0 20px; }
+
+/* App tiles */
+.tile.app .glyph { width: 66px; height: 66px; position: relative; }
+.tile.app .letter { font-size: 60px; font-weight: 600; position: relative; }
+.tile.app .appicon { width: 84px; height: 84px; border-radius: 16px; position: relative; }
+
+/* Channel tiles: dark glass with the channel logo */
+.tile.channel .face {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04));
+  flex-direction: column;
+}
+.tile.channel .logo { max-width: 160px; max-height: 58px; position: relative; }
+.tile.channel .cname { font-size: 26px; font-weight: 600; position: relative; }
+.tile.channel .num {
+  position: absolute; top: 8px; left: 12px;
+  font-size: 19px; color: rgba(255, 255, 255, 0.6);
+}
+.tile.channel .now {
+  position: absolute; bottom: 9px; left: 12px; right: 12px;
+  font-size: 18px; color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+}
+
+.tile.action .face { background: linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)); }
+.tile.action .text { font-size: 23px; text-align: center; padding: 0 16px; position: relative; }
+
+/* Settings button, bottom-right corner */
+#gear {
+  position: fixed;
+  right: 64px;
+  bottom: 40px;
+  z-index: 5;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+}
+#gear .face { background: linear-gradient(160deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06)); color: #2a3142; }
+#gear .glyph { width: 44px; height: 44px; position: relative; }
+#gear .caption { left: -60px; right: -60px; }
+#gear::after { border-radius: 50%; }
+
+#banner {
+  position: fixed;
+  top: 64px;
+  left: 104px;
+  padding: 16px 28px;
+  border-radius: 14px;
+  background: rgba(90, 200, 250, 0.16);
+  border: 2px solid rgba(90, 200, 250, 0.6);
+  font-size: 26px;
+  z-index: 15;
+}
+
+/* ---- Settings panel, slides in from the right */
+
+#panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 720px;
+  padding: 80px 56px;
+  background: rgba(16, 20, 30, 0.94);
+  box-shadow: -30px 0 60px rgba(0, 0, 0, 0.45);
+  z-index: 25;
+}
+#panel h3 { font-size: 40px; font-weight: 600; margin-bottom: 36px; }
+#panel .list { height: 790px; overflow: hidden; }
+#panel .items { transition: transform 160ms ease-out; }
+#panel .item {
+  height: 76px;
+  margin-bottom: 10px;
+  padding: 0 28px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 29px;
+  color: rgba(255, 255, 255, 0.85);
+}
+#panel .item span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#panel .item.sel { background: rgba(255, 255, 255, 0.92); color: #0b0d12; }
+#panel .item.moving { outline: 4px solid #5ac8fa; outline-offset: 3px; }
+#panel .check {
+  flex: 0 0 auto;
+  width: 34px; height: 34px;
+  margin-left: 20px;
+  border-radius: 50%;
+  border: 3px solid currentColor;
+  opacity: 0.5;
+}
+#panel .check.on { background: #34c759; border-color: #34c759; opacity: 1; }
+#panel .hint {
+  position: absolute;
+  bottom: 44px; left: 56px; right: 56px;
+  font-size: 23px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---- Player and overlays */
+
+#player {
+  position: fixed;
+  top: 0; left: 0;
+  width: 1920px; height: 1080px;
+  background: #000;
+  z-index: 10;
+}
+
+#osd {
+  position: fixed; left: 96px; right: 96px; bottom: 72px;
+  padding: 28px 36px;
+  border-radius: 16px;
+  background: rgba(10, 12, 16, 0.82);
+  z-index: 11;
+  font-size: 32px;
+}
+#osd .ch { font-size: 44px; font-weight: 600; }
+#osd .prog { color: #b9bdc9; margin-top: 8px; }
+
+#modal {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background: rgba(5, 6, 9, 0.92);
+  z-index: 20;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  font-size: 36px; line-height: 1.5;
+}
+#modal .code { font-size: 140px; font-weight: 700; letter-spacing: 24px; margin: 30px 0; }
+#modal .hint { color: #8d93a3; font-size: 28px; }
+
+#toast {
+  position: fixed; left: 50%; top: 60px;
+  transform: translateX(-50%);
+  padding: 18px 34px;
+  border-radius: 12px;
+  background: #2a2f3b;
+  font-size: 28px;
+  z-index: 30;
+}
+
+#debug {
+  position: fixed; right: 40px; top: 40px; bottom: 40px; width: 900px;
+  overflow: hidden;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.88);
+  color: #9fe29f;
+  font: 20px/1.35 monospace;
+  white-space: pre-wrap;
+  z-index: 40;
+}

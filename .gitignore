@@ -1,0 +1,15 @@
+# YouTube TV client ID and secret (copy youtube-client.example.js and fill it in)
+launcher/js/youtube-client.js
+
+# HomeControl build output
+homecontrol/bin/
+homecontrol/obj/
+
+# Signed packages and build leftovers
+*.wgt
+author-signature.xml
+signature1.xml
+.manifest.tmp
+
+# Debug logs from logserver.mjs
+*.log
