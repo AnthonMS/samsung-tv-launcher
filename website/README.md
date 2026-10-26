@@ -1,0 +1,1 @@
+This is the publication copy of the bilingual article. Its imports resolve in the mlgaard website Article components, not as a standalone app. Copy into src/components/blog/posts/TvLauncher.tsx and update that site's blog registry. The repository manuals are the canonical command reference.

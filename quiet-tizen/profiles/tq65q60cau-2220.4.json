@@ -1,0 +1,73 @@
+{
+  "model": "TQ65Q60CAUXXC",
+  "firmware": "T-NKLCDEUC-0090-2220.4",
+  "groups": {
+    "ads_analytics": {
+      "app_ids": [
+        "com.samsung.tizen.samsung-analytics",
+        "com.samsung.tv.acr",
+        "com.samsung.tv.adagent-service",
+        "com.samsung.tv.canalysis-service",
+        "com.samsung.tv.coba.adagent",
+        "com.samsung.tv.contents-recognition-dbmgr",
+        "com.samsung.tv.iacr",
+        "com.samsung.tv.pisa-service",
+        "com.samsung.tv.targeted-ad-service",
+        "org.tizen.pisa-control-service"
+      ]
+    },
+    "context": {
+      "app_ids": [
+        "com.samsung.tv.context-aware-agent",
+        "com.samsung.tv.context-aware-agent-toast-view",
+        "com.samsung.tv.context-aware-grab-control",
+        "com.samsung.tv.context-aware-server-requester",
+        "com.samsung.tv.context-aware-service"
+      ]
+    },
+    "voice_assistant": {
+      "app_ids": [
+        "com.samsung.tv.bixby-context-client",
+        "com.samsung.tv.bixby-prov",
+        "com.samsung.tv.bixbycapsuleviewer",
+        "com.samsung.tv.farfieldvoice",
+        "com.samsung.tv.mybixby",
+        "com.samsung.tv.ondevice-voice",
+        "com.samsung.tv.voice-instant-app",
+        "com.samsung.tv.voiceassistant-music",
+        "com.samsung.tv.wakeup-engine-bixby",
+        "org.tizen.voice-app",
+        "org.tizen.voice-app-service",
+        "org.tizen.voice-client",
+        "org.tizen.voice-onboarding",
+        "org.tizen.stt-client",
+        "com.samsung.tv.wakeup-engine-alexa",
+        "com.samsung.tv.wakeupless",
+        "com.samsung.tv.vif"
+      ]
+    },
+    "optional_extras": {
+      "app_ids": [
+        "com.samsung.tizen.smartthings-client",
+        "com.samsung.tizen.smartthings-hub",
+        "com.samsung.tizen.smartthings-plugin",
+        "com.samsung.tizen.smartthings-plugin-platform",
+        "com.samsung.tizen.smartthings-streaming",
+        "com.samsung.tizen.smartthings-thing",
+        "com.samsung.tv.coba.smartthings",
+        "com.samsung.tv.ghdaemon",
+        "com.samsung.tv.health-mde-service",
+        "com.samsung.tv.health-mde-service-view",
+        "com.samsung.tv.health-mde-setting",
+        "com.samsung.tv.health-mde-workout-tracker",
+        "com.samsung.tv.smartthingsfind-daemon",
+        "com.samsung.tv.smartthingsfind-ondemand",
+        "samsunghealth-service-tv"
+      ]
+    }
+  },
+  "notes": [
+    "Exact Q60C case study. Inventory first; never apply to an unverified TV.",
+    "Preserve com.samsung.tv.bixby-promotion and com.samsung.tv.ghservice, which host the custom components."
+  ]
+}

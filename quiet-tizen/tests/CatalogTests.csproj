@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework>
+    <UseAppHost>false</UseAppHost><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../launcher/src/AppLibrary.cs" />
+    <Compile Include="../launcher/src/AppRowLayout.cs" />
+    <Compile Include="../launcher/src/DockOkHold.cs" />
+    <Compile Include="../launcher/src/LauncherHistory.cs" />
+    <Compile Include="../launcher/src/HdmiLabels.cs" />
+    <Compile Include="../launcher/src/DisplayPreferences.cs" />
+    <Compile Include="CatalogTests.cs" />
+    <Compile Include="YouTubeTests.cs" />
+    <Compile Include="MediaTests.cs" /><Compile Include="../launcher/src/HomeFeedLayout.cs" />
+    <Compile Include="RemoteButtonTests.cs" /><Compile Include="../launcher/src/RemoteButtonPreferences.cs" />
+    <Compile Include="../launcher/src/MediaModels.cs" />
+    <Compile Include="../launcher/src/YouTubeModels.cs" />
+    <Compile Include="../launcher/src/YouTubeClient.cs" />
+  </ItemGroup>
+</Project>
