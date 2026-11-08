@@ -71,4 +71,4 @@ Known ACR and voice components are disabled, with persistent opt-outs and automa
 
 ## Home Assistant development
 
-The codex/quietthings-playback branch includes the original QuietThings local API and an optional playback companion. This is a development build, not yet installed or accepted on the TV. See [Home Assistant development](docs/HOME-ASSISTANT.md) for scope, build steps and device validation. Existing current-device evidence above describes the accepted build.
+The codex/quietthings-playback branch includes the original QuietThings local API and an optional playback companion. The development build is installed on the tested Q60C: Moonfin state/progress, play/pause, dashboard integration and recovery after a power cut have passed live checks. Other-app playback providers, seek/stop and controlled standby tests remain unfinished. See [Home Assistant development](docs/HOME-ASSISTANT.md) for the exact scope and [the QuietThings draft contribution](https://github.com/magnetgrouplabs/QuietThings/pull/1) for upstream review.
