@@ -67,3 +67,8 @@ py -3.12 -m unittest discover -s quiet-tizen/tests -p "test_*.py"
 Never commit `.local/`, private OAuth configuration, tokens, viewing/account data, certificates, signing keys, stock Samsung/Moonfin bundles, extracted SDK assemblies, screenshots containing accounts or raw registry snapshots. Ignoring a file does not remove it from an existing Git history. Inspect the staged changes before publishing.
 
 Known ACR and voice components are disabled, with persistent opt-outs and automatic boot masks. A short startup interval remains before root masking. Closed firmware and streaming apps can have other data flows; no decrypted traffic audit established zero telemetry or the exact capture/upload frequency on this TV.
+
+
+## Home Assistant development
+
+The codex/quietthings-playback branch includes the original QuietThings local API and an optional playback companion. This is a development build, not yet installed or accepted on the TV. See [Home Assistant development](docs/HOME-ASSISTANT.md) for scope, build steps and device validation. Existing current-device evidence above describes the accepted build.

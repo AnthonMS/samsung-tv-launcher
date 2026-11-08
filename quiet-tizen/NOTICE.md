@@ -37,3 +37,6 @@ Nintendo, Microsoft, Amazon or any streaming service.
 The custom boot helper and bridge adapt the public-domain boot-agent/bridge-relay in the locally supplied samsung-tv-root fork; its Unlicense is retained under tools/boot-privacy/UNLICENSE.upstream. The vendored SDB transport additionally includes that fork's token-bridge support. The Moonfin transformation targets its inspected 2.10.0 code; no original/generated app bundle is distributed, and upstream MPL notices must remain with any locally modified bundle.
 
 Additional root-transport/boot source was inspected from `github.com/levkropp/samsung-tv-root-untethered.git` at commit `2b0629381b3eaf5a78f84332d630d6d4b10681e7`.
+
+
+The optional Home Assistant development sources include the MIT-licensed QuietThings API from magnetgrouplabs/QuietThings commit 6dd8b9470603909aacd02f96a9f2e8289b0c72a2, plus local experimental playback additions. The original API source is unchanged. See launcher/src/QuietThingsPlayback/NOTICE.md and LICENSE.QuietThings. No private token, framework assembly or account file is distributed.

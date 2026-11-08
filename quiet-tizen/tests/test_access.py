@@ -57,5 +57,19 @@ class AccessTests(unittest.TestCase):
                 _check_target(client)
 
 
+    def test_bridge_parameters_reach_sdb_without_weakening_preflight(self):
+        import asyncio
+        from samsung_tv_root.archive_root import probe, ArchiveRootError
+        for bridge_token, port in ((None, 26103), ("synthetic-test-value", 26104)):
+            with patch("samsung_tv_root.archive_root.find_sdb", return_value=Path("sdb")), \
+                 patch("samsung_tv_root.archive_root.SdbClient") as client, \
+                 patch("samsung_tv_root.archive_root._check_target", side_effect=ArchiveRootError("preflight stopped")):
+                with self.assertRaises(ArchiveRootError):
+                    asyncio.run(probe("192.0.2.10", callback_host="192.0.2.11", bridge_token=bridge_token, bridge_port=port))
+                self.assertEqual(client.call_args.kwargs["bridge_token"], bridge_token)
+                self.assertEqual(client.call_args.kwargs["bridge_port"], port)
+                client.return_value.disconnect.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()

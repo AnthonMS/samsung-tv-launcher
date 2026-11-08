@@ -34,7 +34,7 @@ def main():
   return
  if o.action=='pull':
   if not o.remote.startswith('/') or any(x in o.remote for x in ('\n','\0')):raise ValueError('Use an absolute single-line TV path')
-  q=shlex.quote(o.remote);r=asyncio.run(run([f'stat -c %s {q};sha256sum {q}']))
+  q=shlex.quote(o.remote);r=asyncio.run(run([f'stat -Lc %s {q};sha256sum {q}']))
   lines=r['commands'][0]['stdout'].splitlines();size=int(lines[0]);digest=lines[1].split()[0]
   if size>64*1024*1024:raise ValueError('Split files above 64 MiB')
   r=asyncio.run(run([f'dd if={q} bs=524288 skip={i} count=1 2>/dev/null | base64 -w0' for i in range((size+524287)//524288)]))

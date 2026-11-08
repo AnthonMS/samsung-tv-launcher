@@ -34,3 +34,6 @@
 *.der
 *.crt
 **/*.local.json
+
+# Private project memory and operator findings
+AI/
