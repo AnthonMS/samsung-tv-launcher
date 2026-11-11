@@ -140,3 +140,6 @@ The example's trigger, TV-off behavior, conditional buttons, camera fallback and
 Native UI: `Home.Notifications.cs`. Persistent controls: `HomeAssistantPreferences.cs` and `Home.IntegrationSettings.cs`. Shared validation: `QuietThingsPlayback/TvNotifications.cs`. HA service and camera lifecycle: QuietThings `notifications.py`; image decode/download: `notification_media.py`.
 
 Authenticated companion routes are POST `/v1/notifications`, POST `/v1/notifications/dismiss`, GET `/v1/notifications/status`, POST `/v1/notifications/image` and GET `/v1/notifications/events?after=N`. Image updates match the current ID and increasing frame sequence; they never extend timeout or recreate remote focus. Notification bodies have separate bounds; ordinary transport commands remain limited to 1 KiB. Capabilities advertise `notification_media_version: 2`, live images and GIF support.
+
+
+TV power gating in the portable and installed example uses QuietThings first. A confirmed native off cannot be overridden by a stale Samsung on state. Samsung is consulted only when QuietThings is unknown or unavailable. This gate applies both to sending notices and to the example action handler.

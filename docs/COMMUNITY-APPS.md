@@ -1,14 +1,16 @@
 # Community Apps and Samsung Apps
 
-Quiet Home development version 0.3, November 2026. Managed updates and automatic recovery are installed and tested on the owner's Q60C. Owner daily testing is still required before publication. Community Apps is part of the native launcher. It does not launch or require Apps2Samsung or TV-Store. An in-process installer downloads, checks, signs and installs packages through the TV's localhost developer connection. No new LAN installer service or SDB relay is opened.
+Quiet Home development version 0.4, November 2026. Managed updates and automatic recovery are installed and tested on the owner's Q60C. Owner daily testing is still required before publication. Community Apps is part of the native launcher. It does not launch or require Apps2Samsung or TV-Store. An in-process installer downloads, checks, signs and installs packages through the TV's localhost developer connection. No new LAN installer service or SDB relay is opened.
 
 ## Daily use
 
 Open **Settings > More settings > Community Apps**. Use the remote to choose:
 
-- **Browse**: a list of available package variants. Select one for details, then Install / update and Install now.
+- **Browse**: a four-column grid of app cards, up to 12 per screen. Curated apps use local artwork; other cards use a colored initial. Down past the last row loads the next screen automatically; Up from its first row returns to the previous screen in the same column.
+- **Variants**: same-name packages share one card. Select it to compare release filename, source and package identity before opening details. Different variants are not automatically treated as updates.
+- **Search**: enter words with the TV keyboard and choose Search. Matches include name, description, source, category and package filename/identity. Clear search restores the full selected view.
 - **Installed**: user-installed launchable apps. OK opens the app; Blue adds it to the dock.
-- **Updates**: known updates from the installed package's recorded source. Refresh checks the current catalog. There is no automatic bulk update.
+- **Updates**: verified newer versions or changed builds from the matching recorded source and variant, plus compatible integration-adapter updates. Different sources, alternative variants, older releases and unknown build provenance receive separate labels. Cards and details show installed and available versions. Refresh checks the current catalog. There is no automatic bulk update.
 - **Sources**: add, enable, disable or remove a source. Removing a source keeps its installed apps.
 - **Refresh**: reload available packages and installed applications.
 
@@ -119,3 +121,10 @@ The actual Moonfin 2.10 to 3.0 upgrade retained login, guide integration and cha
 A disposable owner-signed app proved native 1.0 to 2.0 to 1.0 installation without uninstall. The recovery test saved its original package and data, performed an upgrade and simulated data migration, then restored the old package and original data while removing the new-schema file. Separate success and repeated-finish checks proved cleanup and idempotence. Fault and interruption tests cover coordinator ordering and recovery boundaries.
 
 The managed build passed full restart with automatic Quiet Home startup, localhost Developer Mode, both sign-ins, signing profiles, remote grabs and privacy settings retained. YouTube and TizenTube transport checks passed after externalizing the runtime. These are development acceptance results on one Q60C, not a guarantee for every app release, TV or firmware. Final private evidence and exact current revision are maintained in the operator handoff.
+
+
+### November 11 grid and update-policy acceptance
+
+The installed development catalog contained 242 package variants grouped into 150 app cards. Actual remote navigation passed forward/backward automatic paging, Browse/Installed/Updates, variant selection, details, Back and entry to the native search keyboard. Pure search matching and page-boundary checks pass locally. Owner typing with the TV keyboard and visual design acceptance are deferred; no screenshot-based visual certification is claimed.
+
+The corrected Updates view showed two actual groups: KickTV 2.2.2 to 2.3.0 and Moonlight 1.14.0 to 1.20.0. These are an observed catalog snapshot, not a permanent update list. No apps were updated during this UI task. Package receipt provenance and installed package version take precedence over a different catalog hash alone.

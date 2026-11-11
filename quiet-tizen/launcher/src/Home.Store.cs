@@ -23,9 +23,12 @@ public sealed partial class QuietHome
  bool storeLoading,inventoryLoading,storeKeyboard;
  string storeMessage="",sourceDraft="",storeFilter="browse",storeTizenVersion="",storeRequestedFile="";
  int storeListPage,settingsPage;
+ int storeVariantPage,storeGridCount;
+ string storeQuery="",storeGroupName="";
+ readonly List<string> storeGridActions=new();
  TextField storeSourceField;
  TextLabel storeStatus;
- string CommunityStatusJson()=>System.Text.Json.JsonSerializer.Serialize(new {version="0.3-dev",page,loading=storeLoading,busy=community?.Busy??false,submitted=community?.Submitted??false,job=community?.Job??"",pending=community?.Pending??false,count=storeApps.Count,message=storeMessage,tizen=storeTizenVersion,ha_enabled=homeAssistantPreferences?.Enabled??false,notification_active=notificationWindow!=null,playback_foreground=playbackForegroundTrace,selected=selected>=0&&selected<slots.Count?slots[selected].Action:"",sources=community?.Preferences.Sources.Select(x=>new{x.Id,x.Name,x.Enabled}).ToArray(),installed=installedApps.Where(x=>StorePolicy.UserFacing(x)).Select(x=>new{x.Id,x.PackageId,x.Version}).ToArray()});
+ string CommunityStatusJson()=>System.Text.Json.JsonSerializer.Serialize(new {version="0.4-dev",page,loading=storeLoading,busy=community?.Busy??false,submitted=community?.Submitted??false,job=community?.Job??"",pending=community?.Pending??false,count=storeApps.Count,message=storeMessage,tizen=storeTizenVersion,filter=storeFilter,query=storeQuery,group=storeGroupName,grid_page=page==18?storeVariantPage:storeListPage,grid_count=storeGridCount,visible=slots.Where(x=>x.Action.StartsWith("store:group:")||x.Action.StartsWith("store:item:")||x.Action.StartsWith("store:installed:")).Select(x=>new{x.Name,x.Action,x.Description}).ToArray(),ha_enabled=homeAssistantPreferences?.Enabled??false,notification_active=notificationWindow!=null,playback_foreground=playbackForegroundTrace,selected=selected>=0&&selected<slots.Count?slots[selected].Action:"",sources=community?.Preferences.Sources.Select(x=>new{x.Id,x.Name,x.Enabled}).ToArray(),installed=installedApps.Where(x=>StorePolicy.UserFacing(x)).Select(x=>new{x.Id,x.PackageId,x.Version}).ToArray()});
  [DllImport("libcapi-system-info.so.0")]static extern int system_info_get_platform_string(string key,out IntPtr value);
  [DllImport("libpkgmgr-info.so.0")]static extern int pkgmgrinfo_pkginfo_get_pkginfo(string package,out IntPtr handle);
  [DllImport("libpkgmgr-info.so.0")]static extern int pkgmgrinfo_pkginfo_get_version(IntPtr handle,out IntPtr version);
@@ -97,30 +100,66 @@ public sealed partial class QuietHome
   if(storeFilter=="updates")return storeApps.Where(x=>StorePolicy.Status(x,installedApps,community.Preferences.Receipts)=="Update available").ToList();
   return storeApps;
  }
+ List<StoreGroup> StoreGroups()=>StorePresentation.Groups(FilteredStore(),storeQuery);
+ List<StoreApp> StoreVariants()=>FilteredStore().Where(x=>x.Name.Equals(storeGroupName,StringComparison.CurrentCultureIgnoreCase)&&StorePresentation.Matches(storeQuery,x.Name,x.Description,x.File,x.SourceName,x.PackageId)).OrderBy(x=>x.File,StringComparer.OrdinalIgnoreCase).ToList();
+ List<InstalledApp> StoreInstalled()=>installedApps.Where(x=>StorePolicy.UserFacing(x)&&StorePresentation.Matches(storeQuery,x.Name,x.Id,x.PackageId)).OrderBy(x=>x.Name,StringComparer.CurrentCultureIgnoreCase).ToList();
+ void StoreCard(string title,string action,string version,string status,string description,int index,string appId="")
+ {
+  const int w=422,h=166;int x=80+(index%4)*446,y=350+(index/4)*184;
+  var card=Panel(x+w/2,y+h/2,w,h,Dark?new Color(.10f,.15f,.23f,1):new Color(1,1,1,.9f),20);card.PivotPoint=new Position(.5f,.5f,.5f);card.PositionUsesPivotPoint=true;
+  int tint=title.Sum(c=>(int)c)%4;var colors=new[]{new Color(.19f,.38f,.66f,1),new Color(.23f,.44f,.37f,1),new Color(.45f,.30f,.56f,1),new Color(.52f,.34f,.22f,1)};
+  var icon=new View{Position2D=new Position2D(18,18),Size2D=new Size2D(62,62),BackgroundColor=colors[tint],CornerRadius=new Vector4(16,16,16,16)};
+  string initials=string.Concat(title.Split(new[]{' ','-','_'},StringSplitOptions.RemoveEmptyEntries).Take(2).Select(x=>x.Substring(0,1))).ToUpperInvariant();
+  var monogram=Label(initials,0,0,62,62,26,Color.White,"Semibold");monogram.HorizontalAlignment=HorizontalAlignment.Center;monogram.VerticalAlignment=VerticalAlignment.Center;icon.Add(monogram);card.Add(icon);
+  var artwork=library.FirstOrDefault(x=>x.Id==appId);
+  if(artwork!=null&&!string.IsNullOrEmpty(artwork.Asset)&&File.Exists(Root+artwork.Asset)){var image=new ImageView{Position2D=new Position2D(0,0),Size2D=new Size2D(62,62),ResourceUrl=Root+artwork.Asset,FittingMode=FittingModeType.ShrinkToFit};icon.Add(image);monogram.Opacity=0;}
+  var label=Label(title,96,16,308,60,23,ink,"Semibold");label.MultiLine=true;label.Ellipsis=true;card.Add(label);
+  var versions=Label(version,18,94,386,28,18,muted);versions.Ellipsis=true;card.Add(versions);
+  var badge=Label(status,18,128,386,27,18,status.Contains("Update")?accent:muted);badge.Ellipsis=true;card.Add(badge);
+  slots.Add(new Slot{Card=card,Label=label,Name=title,Action=action,Description=version+" | "+status+" | "+description,Row=1+index/4,X=x,Y=y,W=w,H=h});storeGridActions.Add(action);
+ }
+ void BuildStoreGrid()
+ {
+  storeGridActions.Clear();
+  var groups=StoreGroups();var variants=page==18?StoreVariants():new List<StoreApp>();var installed=StoreInstalled();
+  storeGridCount=page==18?variants.Count:storeFilter=="installed"?installed.Count:groups.Count;
+  int current=page==18?storeVariantPage:storeListPage;current=Math.Clamp(current,0,Math.Max(0,(storeGridCount-1)/StorePresentation.PageSize));if(page==18)storeVariantPage=current;else storeListPage=current;
+  int start=current*StorePresentation.PageSize;
+  for(int i=start;i<Math.Min(start+StorePresentation.PageSize,storeGridCount);i++){
+   if(page==18){var app=variants[i];StoreCard(StorePresentation.Variant(app),"store:item:"+storeApps.IndexOf(app),StorePresentation.Versions(app,installedApps),StorePresentation.Status(app,installedApps,community.Preferences.Receipts),app.SourceName+" | "+app.File+" | "+(app.PackageId==""?"Identity checked on download":app.PackageId),i-start,app.AppId);}
+   else if(storeFilter=="installed"){var app=installed[i];StoreCard(app.Name,"store:installed:"+app.Id,"Installed "+(app.Version==""?"unknown":app.Version),"OK to open  |  Blue to add to dock",app.Id,i-start,app.Id);}
+   else{
+    var group=groups[i];var app=group.Variants.FirstOrDefault(x=>StorePolicy.Status(x,installedApps,community.Preferences.Receipts)=="Update available")??group.Variants.FirstOrDefault(x=>StorePolicy.Installed(x,installedApps)!=null)??group.Variants[0];
+    string status=StorePresentation.Status(app,installedApps,community.Preferences.Receipts);
+    StoreCard(group.Name,"store:group:"+i,StorePresentation.Versions(app,installedApps),(group.Variants.Count>1?group.Variants.Count+" variants  |  ":"")+status,group.Variants.Count>1?"Choose a package variant to see its version, source and compatibility":app.Description,i-start,app.AppId);
+   }
+  }
+  if(storeGridCount==0)Text(storeLoading?"Loading app sources...":storeQuery!=""?"No matching apps. Change or clear your search.":storeFilter=="updates"?"No verified updates. Unknown versions are not treated as updates.":"No apps available. Try Refresh or add a source.",100,390,1700,100,26,muted).MultiLine=true;
+  string range=storeGridCount==0?"0 apps":(start+1)+"-"+Math.Min(start+StorePresentation.PageSize,storeGridCount)+" of "+storeGridCount+(page==18?" variants":" apps");
+  Text(range+"   |   "+(current>0?"Up for previous apps   ":"")+(start+StorePresentation.PageSize<storeGridCount?"Down for more apps":"End of list"),80,920,1720,32,20,muted);
+ }
  void BuildCommunityPage()
  {
   storeSourceField=null;storeStatus=null;
-  Text(page==13?"App sources":page==14?"Add app source":page==15?"Review source":page==12?"App details":"Community Apps",80,208,1700,54,34,ink,"Semibold");
+  Text(page==13?"App sources":page==14?"Add app source":page==15?"Review source":page==12?"App details":page==18?storeGroupName+" variants":page==19?"Search Community Apps":"Community Apps",80,208,1700,54,34,ink,"Semibold");
   if(community==null){Text(storeMessage,80,320,1700,80,26,ink);return;}
   if(page==11){
-   StoreButton("Browse","store:browse",80,276,270,0);StoreButton("Installed","store:installed",375,276,270,0);StoreButton("Updates","store:updates",670,276,270,0);StoreButton("Sources","store:sources",965,276,270,0);StoreButton("Refresh","store:refresh",1260,276,270,0);
-   if(storeFilter=="installed"){
-    var list=installedApps.Where(x=>StorePolicy.UserFacing(x)).OrderBy(x=>x.Name,StringComparer.CurrentCultureIgnoreCase).ToList();int start=storeListPage*5;
-    for(int n=start;n<Math.Min(start+5,list.Count);n++)StoreButton(list[n].Name,"store:installed:"+list[n].Id,80,350+(n-start)*98,1760,1+n-start,"Version "+(list[n].Version==""?"unknown":list[n].Version)+"  |  OK to open; Blue to add to dock");
-    StorePagination(list.Count);
-   }else{
-    var list=FilteredStore();int start=storeListPage*5;
-    for(int n=start;n<Math.Min(start+5,list.Count);n++){var app=list[n];StoreButton(app.Name,"store:item:"+storeApps.IndexOf(app),80,350+(n-start)*98,1760,1+n-start,app.SourceName+"  |  "+app.File+"  |  "+StorePolicy.Status(app,installedApps,community.Preferences.Receipts));}
-    if(list.Count==0)Text(storeLoading?"Loading sources...":storeFilter=="updates"?"No known updates. Refresh to check again.":"No apps loaded. Add a source or select Refresh.",100,390,1700,70,25,muted);
-    StorePagination(list.Count);
-   }
+   StoreButton("Browse","store:browse",80,276,196,0);StoreButton("Installed","store:installed",298,276,196,0);StoreButton("Updates","store:updates",516,276,196,0);StoreButton("Sources","store:sources",734,276,196,0);StoreButton("Refresh","store:refresh",952,276,196,0);StoreButton(storeQuery==""?"Search apps...":"Search: "+storeQuery,"store:search",1170,276,668,0);
+   BuildStoreGrid();
+  }else if(page==18){
+   Text("Variants can differ in features, target TV or package identity. Choose one to review before installing.",80,280,1760,52,22,muted).MultiLine=true;
+   BuildStoreGrid();
+  }else if(page==19){
+   Text("Find apps by name, feature, source or package. Back closes the keyboard.",80,290,1720,60,25,muted);
+   storeSourceField=(TextField)Add(new TextField{Text=sourceDraft,PlaceholderText="Search apps",Position2D=new Position2D(90,390),Size2D=new Size2D(1720,85),PixelSize=30,TextColor=ink,BackgroundColor=Dark?new Color(.09f,.14f,.23f,1):new Color(1,1,1,.8f)});
+   StoreButton("Edit search","store:edit-source",80,530,520,0);StoreButton("Search","store:apply-search",630,530,520,0);StoreButton("Clear search","store:clear-search",1180,530,520,0);
   }else if(page==12&&storeChosen!=null){
    var app=storeChosen;string block=StorePolicy.InstallBlock(app,storeTizenVersion);
    Text(app.Name,80,285,1700,48,30,ink,"Semibold");
    var description=Text(app.Description==""?app.File:app.Description,80,345,1720,100,24,muted);description.MultiLine=true;
-   Text("Source: "+app.SourceName+"   |   Release: "+app.Release+"   |   Version: "+app.Version,80,460,1700,40,22,ink);
+   Text(StorePresentation.Versions(app,installedApps)+"   |   "+StorePresentation.Status(app,installedApps,community.Preferences.Receipts),80,460,1700,40,23,ink,"Semibold");
    Text("Package: "+(app.PackageId==""?"checked after download":app.PackageId)+"   |   "+community.SigningStatus,80,510,1700,40,22,muted);
-   var digest=Text(app.Digest==""?"Package has no published hash; verified HTTPS download only.":app.Digest,80,560,1700,60,18,muted);digest.MultiLine=true;
+   var digest=Text("Source: "+app.SourceName+"  |  Release: "+(app.Release==""?"unknown":app.Release)+"\nVariant: "+app.File,80,560,1700,75,20,muted);digest.MultiLine=true;
    StoreButton("Install / update","store:confirm",80,660,520,0,block==""?(ManagedUpdates.Required(app.PackageId)?ManagedUpdates.Description(app.PackageId):"Review before installation"):block);StoreButton("Open app","store:open",630,660,520,0);StoreButton("Add to dock","store:dock",1180,660,520,0);
    if(storeInstallConfirm){Text("Install this package from "+app.SourceName+"? Existing apps will not be removed to resolve conflicts.",80,780,1700,70,24,ink).MultiLine=true;StoreButton("Install now","store:install",80,870,520,1);StoreButton("Cancel","store:cancel-confirm",630,870,520,1);}
   }else if(page==13){
@@ -152,7 +191,13 @@ public sealed partial class QuietHome
   if(page<11||area==3||!(key=="Up"||key=="Down"||key=="Left"||key=="Right"))return false;
   var rows=slots.Where(x=>x.Row>=0).Select(x=>x.Row).Distinct().OrderBy(x=>x).ToList();if(rows.Count==0)return true;
   int row=slots[selected].Row;var current=Row(row);int col=current.IndexOf(selected);
-  if(key=="Left"||key=="Right")selected=current[(col+(key=="Left"?-1:1)+current.Count)%current.Count];
+  bool grid=(page==11||page==18)&&row>=1;
+  if(grid&&((key=="Down"&&row==rows[^1])||(key=="Up"&&row==1&&(page==18?storeVariantPage:storeListPage)>0))){
+   var move=StorePresentation.MovePage(page==18?storeVariantPage:storeListPage,storeGridCount,col,key=="Down");
+   if(move.Index>=0){if(page==18)storeVariantPage=move.Page;else storeListPage=move.Page;BuildPage();if(storeGridActions.Count>0){selected=slots.FindIndex(x=>x.Action==storeGridActions[Math.Min(move.Index,storeGridActions.Count-1)]);area=1;UpdateFocus();WriteState("community_auto_scroll");}}
+   return true;
+  }
+  if(key=="Left"||key=="Right")selected=current[grid?Math.Clamp(col+(key=="Left"?-1:1),0,current.Count-1):(col+(key=="Left"?-1:1)+current.Count)%current.Count];
   else{int at=rows.IndexOf(row)+(key=="Up"?-1:1);if(at<0){area=3;selected=Row(-1)[2];}else if(at<rows.Count){var next=Row(rows[at]);selected=next[Math.Min(col,next.Count-1)];area=1;}}
   UpdateFocus();return true;
  }
@@ -173,6 +218,9 @@ public sealed partial class QuietHome
   if(community.Busy||storeLoading){ShowError(community.Busy?"An installation is running. You can return Home; it will continue.":"Wait for the source check to finish.");return true;}
   switch(action){
    case "store:browse":case "store:installed":case "store:updates":storeFilter=action.Substring(6);storeListPage=0;BuildPage();return true;
+   case "store:search":sourceDraft=storeQuery;NavigateTo(19,1,"community_search");return true;
+   case "store:apply-search":storeQuery=storeSourceField.Text.Trim();storeListPage=0;GoBack();return true;
+   case "store:clear-search":storeQuery="";storeListPage=0;GoBack();return true;
    case "store:sources":storeListPage=0;NavigateTo(13,1,"community_sources");return true;
    case "store:refresh":RefreshInstalledApps(true);RefreshCommunity();return true;
    case "store:add-source":sourceDraft="";NavigateTo(14,1,"community_add_source");return true;
@@ -185,6 +233,7 @@ public sealed partial class QuietHome
    case "store:install":InstallCommunityApp();return true;
    case "store:previous":case "store:next":int count=page==13?community.Preferences.Sources.Count:storeFilter=="installed"?installedApps.Count(x=>StorePolicy.UserFacing(x)):FilteredStore().Count;int size=page==13?4:5;storeListPage=Math.Clamp(storeListPage+(action=="store:next"?1:-1),0,Math.Max(0,(count-1)/size));selected=0;BuildPage();return true;
   }
+  if(action.StartsWith("store:group:")){int index=int.Parse(action.Substring(12));var groups=StoreGroups();if(index<0||index>=groups.Count)return true;var group=groups[index];if(group.Variants.Count==1){storeChosen=group.Variants[0];storeInstallConfirm=false;NavigateTo(12,1,"community_app_details");}else{storeGroupName=group.Name;storeVariantPage=0;NavigateTo(18,1,"community_app_variants");}return true;}
   if(action.StartsWith("store:item:")){storeChosen=storeApps[int.Parse(action.Substring(11))];storeInstallConfirm=false;NavigateTo(12,1,"community_app_details");return true;}
   if(action.StartsWith("store:toggle:")){community.ToggleSource(community.Preferences.Sources[int.Parse(action.Substring(13))].Id);BuildPage();RefreshCommunity();return true;}
   if(action.StartsWith("store:remove:")){int i=int.Parse(action.Substring(13));if(sourceRemove!=i){sourceRemove=i;BuildPage();return true;}community.RemoveSource(community.Preferences.Sources[i].Id);sourceRemove=-1;BuildPage();RefreshCommunity();return true;}

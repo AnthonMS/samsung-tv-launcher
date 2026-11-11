@@ -38,6 +38,7 @@ public sealed class LanResponse
 }
 
 public interface ILanCommunityStatus { string CommunityStatusJson(); }
+public interface ILanDisplayPower { string ReadDisplayPower(); }
 
 public sealed class LanRateLimiter
 {
@@ -202,6 +203,7 @@ public static class LanApiCore
   string path = rq.Path; int q = path.IndexOf('?'); if (q >= 0) path = path.Substring(0, q);
   string m = rq.Method;
   if (path == "/community/status" && b is ILanCommunityStatus store) return m != "GET" ? Fail(405,"method not allowed") : new LanResponse(200,store.CommunityStatusJson());
+  if (path == "/power" && b is ILanDisplayPower display) return m != "GET" ? Fail(405,"method not allowed") : DisplayPower(display);
   if (path == "/health") return m != "GET" ? Fail(405, "method not allowed") : Health(b);
   if (path == "/state") return m != "GET" ? Fail(405, "method not allowed") : State(b);
   if (path.StartsWith("/hdmi/"))
@@ -214,6 +216,13 @@ public static class LanApiCore
   if (path == "/volume") return m != "POST" ? Fail(405, "method not allowed") : Volume(body, b);
   if (path == "/mute") return m != "POST" ? Fail(405, "method not allowed") : Mute(body, b);
   return Fail(404, "not found");
+ }
+
+ static LanResponse DisplayPower(ILanDisplayPower b)
+ {
+  string state="unknown";try{state=b.ReadDisplayPower();}catch{}
+  if(state!="on"&&state!="off")state="unknown";
+  return new LanResponse(200,Json(w=>{w.WriteBoolean("ok",true);w.WriteString("power",state);w.WriteString("power_source","tizen-display");w.WriteString("observed_at",DateTimeOffset.UtcNow.ToString("O"));}));
  }
 
  static LanResponse Health(ILanBackend b)

@@ -70,7 +70,7 @@ Active Cobalt may run behind Samsung's generic app-defined-loader after boot. At
 
 ## HA entities and dashboard
 
-The living-room setup keeps a stable QuietThings playback entity and the existing universal player as dashboard facade. Samsung remains the configured power/volume/source authority. Supported popup play/pause targets QuietThings; unknown playback keeps explicit Samsung fallback. The universal player's explicitly configured Samsung transport routes are not all replaced by companion commands.
+The living-room setup keeps a stable QuietThings playback entity and the existing universal player as dashboard facade. QuietThings now supplies power state and power commands; Samsung retains volume and source control. Supported popup play/pause targets QuietThings; unknown playback keeps explicit Samsung fallback. The universal player's explicitly configured Samsung transport routes are not all replaced by companion commands.
 
 Capabilities come from each current observation. Live streams do not acquire seek simply because a VOD provider supports it. After controls HA requests an immediate actual refresh, avoiding the earlier refresh-request cooldown that delayed resume feedback. Apps, server reporting and LAN latency still matter.
 
@@ -110,7 +110,9 @@ Owner review exposed power-on opening the input viewer while Home still worked. 
 
 A subsequent full boot and input-to-Home standby/wake passed through foreground, power and HA readbacks. Physical screen/remote observation was unavailable for this final repair. See [manual](MANUAL.md#7-assign-home-and-startup-after-accepting-the-trial) and [recovery](RECOVERY.md#restore-homestartup-and-stock-package) for typed values, backups and targeted inverse. A legacy first-screen value was not needed for the repair.
 
-Startup and HA wake reliability are separate. Direct Samsung HA wake was intermittent in the latest tests. A QuietThings wake was skipped once because the entity was unavailable in deeper standby, despite HTTP success. Repeated directed/broadcast PC Wake-on-LAN recovered the TV for final acceptance. Universal wake routing is unchanged; guaranteed deep-standby dashboard wake is not an accepted result.
+Startup and HA wake reliability are separate. A later investigation reproduced Samsung REST reporting standby while YouTube was actually playing. The updated launcher exposes authenticated GET `/power`, reading `Tizen.System.Display.State` on the UI thread: Normal/Dim mean on, Off means off. The response contains `power_source: tizen-display` and an observation timestamp. HA accepts only fresh, valid native observations and uses them before Samsung REST, including power-command guards. Missing/unknown native support falls back to the original Samsung behavior. An app process or background playback alone does not establish display power.
+
+The living-room universal entity now routes state and turn_on/turn_off through QuietThings. Two actual HA digital-remote off/on cycles passed without a physical remote, including 45 seconds in standby, while Samsung could still report standby after wake. Native off clears playback metadata even if a background provider responds. Diagnostic attributes expose `power_source` and `samsung_power_state`. These checks fix the reproduced stale-state fault; every firmware, long sleep duration and network wake condition is not certified.
 
 ## Security and maintenance
 
@@ -124,7 +126,7 @@ Fresh backups and per-file/per-key guarded inverses are required before updates.
 
 Recorded checks include real controls in six apps, app/mode switching and stale-command rejection, controlled boot/standby, restored volume/mute and preserved accounts, eight remote grabs and privacy masks. Latest recorded suites: 123 HA tests on each of two Core targets, 126 shared playback checks, 11 Cobalt launch checks and 315 original API checks, plus bridge/observer/JavaScript suites. These results were not rerun for this documentation-only update.
 
-Later title/menu update: real broadcast titles reached HA for two channels in each live app; pause/resume retained title and correct app identity, and Back to both app menus cleared media and reported idle. The current update passed 131 shared playback checks, 21 bridge checks, 22 Python HTTP/lifecycle tests, title/context JavaScript tests and Cobalt client/proxy regressions. Launcher/bridge builds had zero warnings/errors. No HA Python/UI deployment or restart was needed. This title build did not undergo another full TV reboot, and the earlier wake limitations remain.
+Later title/menu update: real broadcast titles reached HA for two channels in each live app; pause/resume retained title and correct app identity, and Back to both app menus cleared media and reported idle. The current update passed 131 shared playback checks, 21 bridge checks, 22 Python HTTP/lifecycle tests, title/context JavaScript tests and Cobalt client/proxy regressions. Launcher/bridge builds had zero warnings/errors. No HA Python/UI deployment or restart was needed. This title build did not undergo another full TV reboot, and did not itself certify wake behavior. The later native-power acceptance above supersedes the reproduced stale Samsung on-state problem.
 
 HA 2026.5.4 uses stock samsungtvws 2.7.2; the other target is HA 2026.10.4 with samsungtvws 3.0.7. Do not force the newer library under the older core. Build with matching private TV references as described in the manual. Companion/bridge tests and installation contracts are in the [QuietThings fork](https://github.com/AnthonMS/QuietThings), experimental/playback/.
 

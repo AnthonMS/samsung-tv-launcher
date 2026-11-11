@@ -20,6 +20,9 @@ static class CommunityAppsTests
   var dir=Path.Combine(Path.GetTempPath(),"quiet-store-tests-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);
   try{
    var backend=new StatusBackend();const string apiToken="test-only-community-token";
+   Check(LanApiCore.Handle(new LanRequest{Method="GET",Path="/power"},apiToken,Array.Empty<byte>(),backend).Code==401,"display power requires authentication");
+   Check(LanApiCore.Handle(new LanRequest{Method="POST",Path="/power",Authorization="Bearer "+apiToken},apiToken,Array.Empty<byte>(),backend).Code==405,"display power is read only");
+   foreach(string state in new[]{"on","off","unknown","invalid"}){backend.Power=state;using var power=JsonDocument.Parse(LanApiCore.Handle(new LanRequest{Method="GET",Path="/power",Authorization="Bearer "+apiToken},apiToken,Array.Empty<byte>(),backend).Json);Check(power.RootElement.GetProperty("power").GetString()==(state=="invalid"?"unknown":state),"actual display state contract "+state);Check(power.RootElement.GetProperty("power_source").GetString()=="tizen-display"&&DateTimeOffset.TryParse(power.RootElement.GetProperty("observed_at").GetString(),out _),"display source and sample time");}
    var policySource=new StoreSource{Id="test",Enabled=true};var policySources=new[]{policySource};var policyTimes=new Dictionary<string,DateTimeOffset>{{"test",DateTimeOffset.UtcNow.AddHours(1)}};
    Check(StorePolicy.SourceReady("test",policySources,policyTimes,DateTimeOffset.UtcNow),"verified source usable");policySource.Enabled=false;Check(!StorePolicy.SourceReady("test",policySources,policyTimes,DateTimeOffset.UtcNow),"disabled source cannot use stale details");policySource.Enabled=true;Check(!StorePolicy.SourceReady("test",Array.Empty<StoreSource>(),policyTimes,DateTimeOffset.UtcNow),"removed source cannot use stale details");Check(!StorePolicy.SourceReady("test",policySources,new Dictionary<string,DateTimeOffset>(),DateTimeOffset.UtcNow),"failed source refresh cannot install");Check(!StorePolicy.SourceReady("test",policySources,policyTimes,DateTimeOffset.UtcNow.AddHours(2)),"expired source cannot install");
    Check(LanApiCore.Handle(new LanRequest{Method="GET",Path="/community/status"},apiToken,Array.Empty<byte>(),backend).Code==401,"store status requires auth");
@@ -43,6 +46,23 @@ static class CommunityAppsTests
    var curated=new List<LibraryApp>{new(){Id="test.curated",Name="Curated",Asset="a.svg",Width=1,Height=1}};Check(!StorePolicy.UserFacing(new InstalledApp{Id="test.internal",System=true}),"system tools hidden");Check(!StorePolicy.UserFacing(new InstalledApp{Id="HDvLaunchr.Home"}),"legacy helper hidden");var merged=LibraryInventory.Merge(curated,installed);Check(merged.Count==3&&merged.Any(x=>x.Id==LibraryInventory.SamsungStore&&x.DefaultDock),"inventory and Samsung store");Check(LibraryInventory.Merge(merged,new List<InstalledApp>()).Count==2,"removed dynamic app");
    var row=AppRowLayout.Load(Path.Combine(dir,"row.json"),merged);row.Save(Path.Combine(dir,"row.json"));Check(row.Ids.Contains(LibraryInventory.SamsungStore),"store visible in dock");row.Toggle(LibraryInventory.SamsungStore);row.Save(Path.Combine(dir,"row.json"));Check(!AppRowLayout.Load(Path.Combine(dir,"row.json"),merged).Ids.Contains(LibraryInventory.SamsungStore),"hidden store remains hidden");
    await SignTest(package,dir);
+   var selected=new StoreApp{Name="Player",File="player-v1.0.0.wgt",SourceId="community",PackageId="QhStoreTst",AppId="QhStoreTst.Test",Version="1.0.0",Digest="sha256:"+new string('b',64)};
+   var selectedReceipt=new[]{new StoreReceipt{PackageId="QhStoreTst",SourceId="community",File="player-v1.0.0.wgt",Version="1.0.0",Digest="sha256:"+new string('a',64)}};
+   var alternative=new StoreApp{Name="Player",File="player-oblong-v1.0.0.wgt",SourceId="community",PackageId="QhStoreTst",AppId="QhStoreTst.Test",Version="1.0.0",Digest="sha256:"+new string('c',64),Description="Different icon"};
+   Check(StorePolicy.Status(alternative,installed,selectedReceipt)=="Alternative variant","different artifact is not an update to the selected variant");
+   Check(StorePolicy.Status(selected,installed,selectedReceipt)=="Update available"&&StorePresentation.Status(selected,installed,selectedReceipt)=="New build available","same-version publisher rebuild remains an explicit build update");
+   selected.File="player-v2.0.0.wgt";selected.Version="2.0.0";Check(StorePolicy.Status(selected,installed,selectedReceipt)=="Update available","version suffix does not disguise same-variant upgrade");
+   selected.Version="0.9.0";Check(StorePolicy.Status(selected,installed,selectedReceipt)=="Older version","different hash never upgrades a downgrade");selected.Version="";
+   Check(StorePolicy.Status(selected,installed,Array.Empty<StoreReceipt>())=="Installed; check version","unknown available version is not an update");
+   selected.Url="https://example.com/player.wgt";alternative.Url="https://example.com/player-oblong.wgt";
+   var grouped=StorePresentation.Groups(new[]{selected,alternative,alternative},"");Check(grouped.Count==1&&grouped[0].Variants.Count==2,"one app card retains distinct variants and removes repeated identical assets");
+   Check(StorePresentation.Groups(new[]{selected,alternative},"oblong").Single().Variants.Single()==alternative,"search matches a variant and preserves its identity");
+   Check(StorePresentation.Groups(new[]{selected,alternative},"different icon").Single().Variants.Single()==alternative,"multiword search includes package description");
+   Check(StorePresentation.Groups(new[]{selected,alternative},"unmatched").Count==0,"no-match search stays empty");
+   Check(StorePresentation.MovePage(0,25,2,true)==(1,2),"down loads next grid preserving column");
+   Check(StorePresentation.MovePage(2,25,2,false)==(1,10),"up returns to prior bottom row");
+   Check(StorePresentation.MovePage(1,25,3,true)==(2,0),"short final page clamps focus to real tile");
+   Check(StorePresentation.MovePage(2,25,0,true)==(2,-1)&&StorePresentation.MovePage(0,25,0,false)==(0,-1),"navigation cannot wrap past grid boundaries");
    if(args.Length>2){var profiles=SigningProfile.Load(args[2]);Check(profiles.Count>0,"private profile import");foreach(var profile in profiles){profile.Validate(args[2],false);Check(profile.AuthorFingerprint(args[2]).Length==64,"private profile opens without logging keys");}}
    await FakeInstall(package,true);await FakeInstall(package,false);await FakeInstall(package,true,true);
    if(args.Length>0){var bytes=File.ReadAllBytes(args[0]);var key=File.ReadAllText(args[1]);var data=StoreCatalog.Verify(bytes,key,StoreCatalog.Fingerprint(key));using var actual=JsonDocument.Parse(data);var actualSource=new StoreSource{Id="community",Name="Community"};var apps=StoreCatalog.Parse(actual.RootElement,actualSource,DateTimeOffset.UtcNow,false);Check(apps.Count>30,"actual signed community catalog");Console.WriteLine("Actual signed catalog: "+apps.Count+" package variants");}
@@ -59,8 +79,9 @@ static class CommunityAppsTests
    Check(accepted==(test.GetProperty("expect").GetString()=="accept"),"repository vector "+file+(test.TryGetProperty("reason",out var reason)?" "+reason.GetString():""));
   }
  }
- sealed class StatusBackend : ILanBackend,ILanCommunityStatus
+ sealed class StatusBackend : ILanBackend,ILanCommunityStatus,ILanDisplayPower
  {
+  public string Power="unknown";public string ReadDisplayPower()=>Power;
   public bool Paused=>false;public long UptimeSeconds=>0;public string CommunityStatusJson()=>"{\"busy\":false}";
   public LanSelection ReadSelection()=>new();public LanNative ReadNative(int port)=>new(){Inputs=new()};public int SelectPort(int port)=>0;public bool SetVolume(int level)=>true;public bool SetMute(bool mute)=>true;public void Delay(int ms){}
  }

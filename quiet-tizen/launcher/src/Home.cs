@@ -229,7 +229,7 @@ public sealed partial class QuietHome : NUIApplication
   if(page==4||page==5)BuildYouTubeSettings();
   if(page>=6&&page<=8)BuildMediaSettings();
   if(page==9||page==10)BuildRemoteSettings();
-  if(page>=11&&page<=15)BuildCommunityPage();
+  if((page>=11&&page<=15)||page==18||page==19)BuildCommunityPage();
   if(page==16||page==17)BuildIntegrationSettings();
   if(page==0){
   BuildHomeFeeds();homeDockStart=slots.Count;
@@ -462,10 +462,10 @@ public sealed partial class QuietHome : NUIApplication
   for(int i=0;i<tabs.Length;i++){tabs[i].TextColor=i==(page>=3?2:page)?ink:muted;tabs[i].FontFamily="Quiet Inter "+(i==(page>=3?2:page)?"Semibold":"Medium");tabs[i].BackgroundColor=area==0&&i==(page>=3?2:page)?(Dark?new Color(.17f,.22f,.33f,1):new Color(1,1,1,.7f)):new Color(0,0,0,0);tabs[i].CornerRadius=new Vector4(34,34,34,34);}
   for(int i=0;i<slots.Count;i++){
    var s=slots[i];bool f=area!=0&&selected==i;
-   bool dock=page==0&&s.Row==1;bool mediaCard=page==0&&s.Row>=10;
+   bool dock=page==0&&s.Row==1;bool mediaCard=page==0&&s.Row>=10;bool storeCard=(page==11||page==18)&&s.Row>=1;
    float scale=f?(s.Row==-1?1.16f:mediaCard?1.05f:dock?(pickedUp?1.12f:1.08f):page==1&&s.Row>=0?1.055f:(page>=2)&&s.Row>=0?1.035f:s.Row==0?1.05f:1.10f):1;
-   s.Card.BorderlineWidth=mediaCard?(f?4:0):dock?(f?(pickedUp?4:2):0):page==1&&s.Row>=0?(f?4:1):s.Row==0?1:0;
-   s.Card.BorderlineColor=(dock||mediaCard||page==1)&&f?accent:Dark?new Color(.54f,.63f,.80f,f?.8f:.24f):new Color(1,1,1,f?.8f:.28f);
+   s.Card.BorderlineWidth=mediaCard?(f?4:0):dock?(f?(pickedUp?4:2):0):storeCard?(f?3:1):page==1&&s.Row>=0?(f?4:1):s.Row==0?1:0;
+   s.Card.BorderlineColor=(dock||mediaCard||storeCard||page==1)&&f?accent:Dark?new Color(.54f,.63f,.80f,f?.8f:.24f):new Color(1,1,1,f?.8f:.28f);
    var pos=new Position(s.X+s.W/2f,s.Y+s.H/2f-(f?(dock?(pickedUp?12:6):(s.Row==0||page==1&&s.Row>=0?5:0)):0),0);
    if(animate){focusAnimation.AnimateTo(s.Card,"Scale",new Vector3(scale,scale,1));focusAnimation.AnimateTo(s.Card,"Position",pos);}else{s.Card.Scale=new Vector3(scale,scale,1);s.Card.Position=pos;}
    bool hidden=dock&&customizingDock&&!appRow.Ids.Contains(s.Action.Substring(4));

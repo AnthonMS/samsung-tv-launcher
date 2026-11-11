@@ -95,17 +95,65 @@ public static class StorePolicy
  }
  public static string Status(StoreApp app,IReadOnlyList<InstalledApp> installed,IReadOnlyList<StoreReceipt> receipts)
  {
-  var own=installed.FirstOrDefault(x=>(app.AppId!=""&&x.Id==app.AppId)||(app.PackageId!=""&&x.PackageId==app.PackageId));
+  var own=Installed(app,installed);
   if(own==null)return "Install";
   var receipt=receipts.FirstOrDefault(x=>x.PackageId==own.PackageId);
   if(receipt!=null&&receipt.SourceId!=app.SourceId)return "Different source";
+  if(receipt!=null&&receipt.File!=""&&app.File!=""&&VariantKey(receipt.File)!=VariantKey(app.File))return "Alternative variant";
+  if(receipt!=null&&receipt.File==""&&receipt.Digest!=app.Digest)return "Installed; check variant";
+  bool nextKnown=Version.TryParse(app.Version,out var next),currentKnown=Version.TryParse(own.Version,out var current),comparable=nextKnown&&currentKnown;
+  if(comparable&&next<current)return "Older version";
   if(receipt!=null&&ManagedUpdates.Required(own.PackageId)&&receipt.Adapter!=ManagedUpdates.AdapterId(own.PackageId))return "Update available";
+  if(comparable&&next>current)return "Update available";
+  if(receipt!=null&&receipt.Version!=""&&receipt.Version!=own.Version)return "Installed; check build";
   if(receipt!=null&&receipt.Digest==app.Digest&&app.Digest!="")return "Installed";
   if(receipt!=null&&receipt.Digest!=""&&app.Digest!=""&&receipt.Digest!=app.Digest)return "Update available";
   if(receipt!=null&&receipt.Release!=""&&receipt.Release!=app.Release)return "Update available";
-  if(Version.TryParse(app.Version,out var next)&&Version.TryParse(own.Version,out var current))return next>current?"Update available":next<current?"Older version":"Installed";
+  if(comparable)return "Installed";
   return "Installed; check version";
  }
+ public static InstalledApp Installed(StoreApp app,IReadOnlyList<InstalledApp> installed)=>installed.FirstOrDefault(x=>(!string.IsNullOrEmpty(app.AppId)&&x.Id==app.AppId)||(!string.IsNullOrEmpty(app.PackageId)&&x.PackageId==app.PackageId));
+ // Only remove a terminal release version, preserving meaningful build/channel labels.
+ public static string VariantKey(string file)=>Regex.Replace(Path.GetFileNameWithoutExtension(file??""),@"[_-]v?\d+(?:\.\d+){1,3}$","",RegexOptions.IgnoreCase).ToLowerInvariant()+Path.GetExtension(file??"").ToLowerInvariant();
  public static int SettingsPageCount(int count)=>(count+11)/12;
  public static bool SourceReady(string id,IReadOnlyList<StoreSource> sources,IReadOnlyDictionary<string,DateTimeOffset> verified,DateTimeOffset now)=>verified.TryGetValue(id,out var expiry)&&expiry>=now&&(id=="community"||sources.Any(x=>x.Id==id&&x.Enabled));
+}
+
+public sealed class StoreGroup
+{
+ public string Name {get;set;}="";
+ public List<StoreApp> Variants {get;set;}=new();
+}
+public static class StorePresentation
+{
+ public const int Columns=4,PageSize=12;
+ public static bool Matches(string query,params string[] fields)=>string.IsNullOrWhiteSpace(query)||query.Trim().Split(' ',StringSplitOptions.RemoveEmptyEntries).All(word=>fields.Any(field=>(field??"").Contains(word,StringComparison.CurrentCultureIgnoreCase)));
+ public static List<StoreGroup> Groups(IEnumerable<StoreApp> apps,string query)=>apps.Where(x=>Matches(query,x.Name,x.Description,x.File,x.Category,x.SourceName,x.PackageId)).GroupBy(x=>x.Name.Trim(),StringComparer.CurrentCultureIgnoreCase).Select(group=>new StoreGroup{Name=group.First().Name,Variants=group.GroupBy(x=>x.Key,StringComparer.Ordinal).Select(x=>x.First()).OrderBy(x=>x.File,StringComparer.OrdinalIgnoreCase).ToList()}).OrderBy(x=>x.Name,StringComparer.CurrentCultureIgnoreCase).ToList();
+ public static string Versions(StoreApp app,IReadOnlyList<InstalledApp> installed)
+ {
+  var own=StorePolicy.Installed(app,installed);
+  string available=string.IsNullOrEmpty(app.Version)?"unknown":app.Version;
+  return own==null?"Available "+available:"Installed "+(string.IsNullOrEmpty(own.Version)?"unknown":own.Version)+"  >  Available "+available;
+ }
+ public static string Variant(StoreApp app)
+ {
+  string name=Path.GetFileNameWithoutExtension(app.File??"").Replace('_',' ');
+  return name.Length==0?app.Name:name;
+ }
+ public static string Status(StoreApp app,IReadOnlyList<InstalledApp> installed,IReadOnlyList<StoreReceipt> receipts)
+ {
+  string status=StorePolicy.Status(app,installed,receipts);
+  var own=StorePolicy.Installed(app,installed);var receipt=receipts.FirstOrDefault(x=>x.PackageId==own?.PackageId);
+  if(status=="Installed"&&(receipt==null||receipt.Digest==""||receipt.Digest!=app.Digest))return "Version matches; build unverified";
+  if(status!="Update available")return status;
+  if(receipt!=null&&ManagedUpdates.Required(own.PackageId)&&receipt.Adapter!=ManagedUpdates.AdapterId(own.PackageId))return "Integration update";
+  return app.Version==own?.Version?"New build available":"Update available";
+ }
+ public static (int Page,int Index) MovePage(int page,int count,int column,bool down)
+ {
+  int last=Math.Max(0,(count-1)/PageSize),next=page+(down?1:-1);
+  if(next<0||next>last)return(page,-1);
+  int onPage=Math.Min(PageSize,count-next*PageSize),row=down?0:(onPage-1)/Columns;
+  return(next,Math.Min(row*Columns+column,onPage-1));
+ }
 }

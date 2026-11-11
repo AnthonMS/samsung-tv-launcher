@@ -13,7 +13,7 @@ using System.Threading;
 // Bearer-token QuietThings API hosted inside the launcher (power-free: inputs, volume, mute).
 // Runs on its own background thread. Every failure is contained.
 // Pure logic lives in LanApiCore.cs.
-public sealed class LanApi : ILanBackend, ILanCommunityStatus
+public sealed class LanApi : ILanBackend, ILanCommunityStatus, ILanDisplayPower
 {
  public const int Port=18765;
  const int MaxRequest=8192,IoTimeoutMs=3000,UiTimeoutMs=3000,TokenCheckMs=10000,MaxPerSecond=4;
@@ -236,4 +236,9 @@ public sealed class LanApi : ILanBackend, ILanCommunityStatus
  public bool SetVolume(int level){return OnUi(()=>setVolume(level));}
  public bool SetMute(bool mute){return OnUi(()=>setMute(mute));}
  public string CommunityStatusJson()=>OnUi(()=>communityStatus==null?"{}":communityStatus());
+ public string ReadDisplayPower()
+ {
+  try{return OnUi(()=>Tizen.System.Display.State switch {Tizen.System.DisplayState.Normal=>"on",Tizen.System.DisplayState.Dim=>"on",Tizen.System.DisplayState.Off=>"off",_=>"unknown"});}
+  catch{return "unknown";}
+ }
 }
