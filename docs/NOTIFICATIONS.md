@@ -31,7 +31,7 @@ data:
       title: Unlock Door
 ```
 
-The TV adds its own OK/dismiss button. Sending another notice replaces the old one. A sleeping TV is not automatically woken and there is no queue that displays an old doorbell hours later. HA reports request errors to the calling action. An optional service response includes the generated `id` and `displayed: true` after TV acceptance; this does not prove a person read it.
+The TV adds its own OK/dismiss button. Once a new notice is prepared and accepted by the TV, it replaces the visible one immediately, with its own timeout and buttons. There is no display queue and the old notice does not return afterward. Its old camera preview stops, and delayed image updates cannot replace the new notice. A sleeping TV is not automatically woken and there is no queue that displays an old doorbell hours later. HA reports request errors to the calling action. An optional service response includes the generated `id` and `displayed: true` after TV acceptance; this does not prove a person read it.
 
 Duration is 5 to 120 seconds. Titles are at most 100 characters and body messages 500. Each actionable notification needs a unique ID; omit `id` to generate one, or supply a new bounded letters/digits/underscore/colon/hyphen ID each time.
 
@@ -123,14 +123,15 @@ data:
 
 An old ID cannot dismiss a newer notice.
 
-## Installed doorbell example
+## Installed doorbell and person-detection example
 
-The owner's HA now has `/config/packages/quiet_home_tv_notifications.yaml`, containing `script.door_bell_notify_tv` and two enabled automations:
+The owner's HA now has `/config/packages/quiet_home_tv_notifications.yaml`, containing the shared `script.door_bell_notify_tv` and three enabled automations:
 
 - Quiet Home: doorbell camera notification listens to the existing physical deCONZ doorbell's single, double and hold presses. It calls the script, which checks that the TV is on. Existing phone notifications and the triple-press lock behavior are unchanged.
-- Quiet Home: Unlock Door notification action matches the TV entry, `UNLOCK_FRONT_DOOR` and a `doorbell-tv-` notification ID. It checks that the door is still locked and the TV is on, then calls `lock.unlock` on the front door.
+- Quiet Home: front door person camera notification listens to `binary_sensor.detection_zone_person_occupancy` changing from off to on, the same detection zone used by the front-door spots. It calls the shared script with `notification_kind: person`. The script checks TV power. Unlike the light automation, notifications do not depend on darkness, the light's state or the motion-light enable switch. There is one notification per clear-to-occupied transition, not one per frame or person count change.
+- Quiet Home: Unlock Door notification action matches the TV entry, `UNLOCK_FRONT_DOOR` and a `doorbell-tv-` or `person-tv-` notification ID. It checks that the door is still locked and the TV is on, then calls `lock.unlock` on the front door.
 
-The script generates a unique ID and only offers Unlock Door when the lock is locked. It defaults to a live `camera.front_door` preview and falls back to text on an initial camera failure. Use this package as the local example for other notifications/actions. The portable template is in the QuietThings repository at `examples/doorbell-tv.yaml`, with an entry-ID placeholder.
+The script generates a unique ID and only offers Unlock Door when the lock is locked. It defaults to a live `camera.front_door` preview for 30 seconds and falls back to text on an initial camera failure. Doorbell callers omit `notification_kind`; person callers receive a distinct Person at the front door title/message/ID. Either kind replaces the current notice; a newer person notice can replace a doorbell notice and vice versa. Use this package as the local example for other notifications/actions. The portable template is in the QuietThings repository at `examples/doorbell-tv.yaml`, with an entry-ID placeholder.
 
 The example's trigger, TV-off behavior, conditional buttons, camera fallback and callback matching were tested in isolated HA with a mocked lock service. On the real system the installed notification script was called and safely dismissed; the real lock state and unlock callback's last-trigger time stayed unchanged. Development never sends the live `UNLOCK_FRONT_DOOR` test action or operates the actual lock.
 
