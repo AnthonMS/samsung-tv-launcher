@@ -1,5 +1,7 @@
 # Manual setup, from an untouched compatible TV
 
+For an AI-assisted installation, start with [the AI installation guide](AI-INSTALLATION.md). It maps the complete stack, including optional playback, app-store and notification provisioning, onto the staged manual below.
+
 This guide separates reusable steps from observations of the tested Q60C. Substitute your own TV/PC addresses and inspected values. Commands run on the PC unless a block says **TV shell script**. Root commands are fed to `/bin/sh` on the TV through the helper. Each helper invocation must finish before the next starts.
 
 ## 1. Prerequisites
@@ -100,6 +102,7 @@ sqlite3 -readonly /opt/dbspace/.webappservice.db ".backup '$D/.webappservice.db'
 cp -a /opt/usr/apps/com.samsung.tv.bixby-promotion "$D/bixby-before"
 vconftool get db/appfw/home_appid > "$D/home-before.txt"
 vconftool get db/appfw/startup_appid > "$D/startup-before.txt"
+vconftool get db/menu/smart_hub/ontvsetting/auto_start > "$D/home-autostart-before.txt"
 /usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.9/corerun /home/owner/share/tmp/sdk_tools/Probe.dll > "$D/operation-and-sources-before.txt"
 sqlite3 -readonly "$D/.pkgmgr_parser.db" 'PRAGMA quick_check;'
 tar -czf /home/owner/share/tmp/sdk_tools/native-01-backup.tar.gz -C "$D" .
@@ -168,6 +171,21 @@ vconftool get db/appfw/startup_appid
 ```powershell
 tv exec .local/assign-home.sh
 ```
+
+On the tested Q60C, also check Samsung's separate **Start with Smart Hub Home** policy:
+
+```sh
+vconftool get db/menu/smart_hub/ontvsetting/auto_start
+```
+
+This TV stored it as an `Int32`. With value `0`, a full restart reset `startup_appid` to `org.tizen.tv-viewer` and opened the input viewer even though Home and the main-operation handler still pointed to Quiet Home. After backing up the current policy and preparing its targeted inverse, enabling it restored automatic Quiet Home startup:
+
+```sh
+vconftool set -f -t int db/menu/smart_hub/ontvsetting/auto_start 1
+vconftool set -f -t string db/appfw/startup_appid com.samsung.tv.bixby-promotion
+```
+
+Inspect the actual key and type before using these Q60C commands elsewhere. Re-check both values after restarting; reading them immediately after setting them does not prove persistence. The legacy `db/first_screen/type` value was not needed for this repair.
 
 Wait for the helper to finish cleanup, then perform a full restart with the remote. Test Home from YouTube/Moonfin, a fresh boot and standby/wake separately. Preserve all three original selectors for undo. The optional upstream QuickLaunch/sidebar replacement is not part of this Q60C setup; native `org.tizen.menu` must remain available.
 

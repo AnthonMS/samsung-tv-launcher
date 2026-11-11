@@ -45,6 +45,8 @@ Stop Quiet Home to release exclusive grabs. If the exact keygrab rule was absent
 
 Use the three original values saved before assignment: main-operation application, `db/appfw/home_appid` and `db/appfw/startup_appid`. Do not assume another TV's stock app ID. On a TV that previously used the web trampoline, these originals may be custom values.
 
+If the separate Home autostart policy was changed, also restore its saved value and type from `home-autostart-before.txt`. On the tested Q60C, `db/menu/smart_hub/ontvsetting/auto_start` is an integer, so its inverse uses `vconftool set -f -t int` with the actual original value. Guard the current value before restoring it. Restoring selectors alone does not undo a policy change.
+
 ```sh
 # Substitute the ACTUAL saved values, not these placeholders.
 /usr/share/dotnet/shared/Microsoft.NETCore.App/6.0.9/corerun /home/owner/share/tmp/sdk_tools/Probe.dll set-home ORIGINAL_MAIN_APP

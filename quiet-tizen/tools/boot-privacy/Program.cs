@@ -22,7 +22,8 @@ sealed class BootPrivacy : ServiceApplication
   string host="127.0.0.1";int port=26101;
   if(File.Exists(Resources+"/test-endpoint")){string[] cfg=File.ReadAllLines(Resources+"/test-endpoint");host=cfg[0];port=int.Parse(cfg[1]);Note("test endpoint; delayed 45 seconds for installer cleanup");Thread.Sleep(45000);}
   if(File.Exists("/opt/usr/share/quiet-tizen-privacy/disabled")){Note("disabled");return;}
-  foreach(string n in new[]{"SamsungTvArchiveRoot.dll","SamsungTvArchiveRoot.runtimeconfig.json","public.pem","passwd",Package+".tar.gz",Package+".tar.gz.signature"})File.Copy(Resources+"/"+n,Work+"/"+n,true);
+  foreach(string n in new[]{"SamsungTvArchiveRoot.dll","SamsungTvArchiveRoot.runtimeconfig.json","public.pem","passwd"})File.Copy(Resources+"/"+n,Work+"/"+n,true);
+  Note(BootResourceSelection.Stage(Resources,Work,Package,"/opt/usr/share/quietthings-web-playback",Note)?"optional signed resources selected":"original signed resources selected");
   string outer="set -eu\nmkdir -p "+Stage+" "+Demand+"\n"+
    "cp "+Work+"/SamsungTvArchiveRoot.dll "+Work+"/SamsungTvArchiveRoot.runtimeconfig.json "+Work+"/public.pem "+Work+"/passwd "+Stage+"/\n"+
    "cp "+Work+"/"+Package+".tar.gz "+Work+"/"+Package+".tar.gz.signature "+Demand+"/\n"+

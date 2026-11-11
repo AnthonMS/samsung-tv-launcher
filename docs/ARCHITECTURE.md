@@ -9,6 +9,9 @@
 5. Direct HTTPS clients fetch YouTube/Jellyfin data; foreground playback is handed to installed apps.
 6. A small version-guarded Moonfin bridge delivers EPG and channel navigation to Moonfin's own callbacks.
 7. Optional boot privacy repurposes the separate Gaming Hub Service slot, roots through localhost SDB and recreates runtime masks. A token relay preserves PC management.
+8. The optional QuietThings playback companion in the launcher exposes foreground-gated Jellyfin, web-player and Cobalt observations. Web/Cobalt providers additionally use the protected root playback service and app-local observers. The modified HA integration and personal dashboard are separate layers. See [current playback architecture and limits](HOME-ASSISTANT.md).
+
+Home startup also depends on Samsung's separate Start with Smart Hub Home policy. On the tested Q60C, setting only the two app selectors did not survive restart while that policy was disabled. The current manual covers its typed backup, setting and inverse.
 
 ## Source map
 
@@ -25,6 +28,7 @@
 | tools/boot-privacy | Headless bootstrap, token relay and four-service policy |
 | tools/device.py (repository root) | Explicit-target script transport, private verified pull and SDB bridge |
 | tools/prepare_boot.py (repository root) | Compile/sign private boot resources and package, without installing |
+| Home.HomeAssistant.cs / QuietThingsPlayback | Optional companion, foreground/account callbacks and managed playback launch |
 
 ## Performance rules
 
@@ -37,3 +41,9 @@ A feature was added, installed and tested before the next feature. Preserve this
 Do not ship Samsung framework references, stock package code, a Moonfin minified bundle, app icons downloaded for personal use, account databases or signing keys. Re-obtain references from the permitted SDK/TV. Reinspect Moonfin after app updates. Reinspect firmware-dependent labels, UIDs, package slots, private APIs and unit conditions after firmware changes.
 
 The boot helper is bound to the inspected firmware build date and runtime path. Keep a working management connection and manual Developer Mode recovery route before changing it. Never disable updates as a generic shortcut.
+
+## Managed Community Apps updates
+
+`CommunityApps/ManagedUpdates.cs` owns package transformations, applied after upstream digest/manifest checks and before same-author signing. It checks specific callback/service structure, preserves upstream code around the additions and records adapter identity independently of upstream version. Catalogs cannot execute arbitrary scripts. Newer Moonfin AVPlay seeks report their measured position on successful completion; failed seeks do not fabricate state.
+
+TizenTube's injected bootstrap loads an owner-provisioned external runtime whose code and private observation key survive package replacement. Samsung YouTube keeps its stock configuration and normal official update path; managed launch supplies our mode-specific arguments. App-local labels, private key permissions and native service lifecycle still require hardware verification. Version 0.2 final device acceptance is pending; see COMMUNITY-APPS.md.

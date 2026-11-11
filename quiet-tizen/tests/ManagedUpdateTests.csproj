@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net6.0</TargetFramework><UseAppHost>false</UseAppHost><EnableDefaultCompileItems>false</EnableDefaultCompileItems><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+ <ItemGroup><Compile Include="ManagedUpdateTests.cs"/><Compile Include="../launcher/src/CommunityApps/ManagedUpdates.cs"/><Compile Include="../launcher/src/CommunityApps/StoreClient.cs"/><Compile Include="../launcher/src/CommunityApps/StoreCatalog.cs"/><Compile Include="../launcher/src/CommunityApps/LocalInstaller.cs"/><Compile Include="../launcher/src/CommunityApps/Vendor/TizenResigner.cs"/><Compile Include="../launcher/src/CommunityApps/StoreModels.cs"/><Compile Include="../launcher/src/CommunityApps/StorePackage.cs"/></ItemGroup>
+<ItemGroup><Compile Include="../launcher/src/CommunityApps/ManagedInstallRecovery.cs"/></ItemGroup>
+<ItemGroup><PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.5"/></ItemGroup></Project>

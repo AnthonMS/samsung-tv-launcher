@@ -13,7 +13,7 @@ using System.Threading;
 // Bearer-token QuietThings API hosted inside the launcher (power-free: inputs, volume, mute).
 // Runs on its own background thread. Every failure is contained.
 // Pure logic lives in LanApiCore.cs.
-public sealed class LanApi : ILanBackend
+public sealed class LanApi : ILanBackend, ILanCommunityStatus
 {
  public const int Port=18765;
  const int MaxRequest=8192,IoTimeoutMs=3000,UiTimeoutMs=3000,TokenCheckMs=10000,MaxPerSecond=4;
@@ -31,6 +31,8 @@ public sealed class LanApi : ILanBackend
  readonly Func<int,bool> setVolume;     // UI thread only
  readonly Func<bool,bool> setMute;      // UI thread only
  readonly Func<int,string> fallbackName; // inputs.json name for a port, or null
+ readonly Func<string> communityStatus;
+ readonly Func<bool> accessEnabled;
  readonly long startedAt=Environment.TickCount64;
  readonly LanRateLimiter limiter=new LanRateLimiter(MaxPerSecond);
  string token;
@@ -40,9 +42,11 @@ public sealed class LanApi : ILanBackend
  Thread thread;
 
  // Call from the UI thread (OnCreate) so SynchronizationContext.Current is the main loop.
- public LanApi(Func<int,int> selectSource,Func<bool> isPaused,Func<int,bool> setVolume,Func<bool,bool> setMute,Func<int,string> fallbackName)
+ public LanApi(Func<int,int> selectSource,Func<bool> isPaused,Func<int,bool> setVolume,Func<bool,bool> setMute,Func<int,string> fallbackName,Func<string> communityStatus=null,Func<bool> accessEnabled=null)
  {
   this.selectSource=selectSource;this.isPaused=isPaused;this.setVolume=setVolume;this.setMute=setMute;this.fallbackName=fallbackName;
+  this.communityStatus=communityStatus;
+  this.accessEnabled=accessEnabled??(()=>true);
   ui=SynchronizationContext.Current;
   try{var d=Tizen.Applications.Application.Current.DirectoryInfo.Data;if(!string.IsNullOrEmpty(d))tokenPath=Path.Combine(d,"lan-api.token");}catch{}
   if(tokenPath=="")tokenPath="/tmp/quietthings-api.token";
@@ -135,7 +139,7 @@ public sealed class LanApi : ILanBackend
    }
   }
   RefreshToken();
-  var resp=LanApiCore.Handle(rq,token,body,this);
+  var resp=!accessEnabled()&&rq.Path!="/community/status"&&LanApiCore.IsAuthorized(rq.Authorization,token)?LanApiCore.Fail(503,"Local Home Assistant access disabled"):LanApiCore.Handle(rq,token,body,this);
   Reply(s,resp.Code,resp.Json);
   if(rq.ContentLength>LanApiCore.MaxBody){
    // Best effort drain of an oversize body, bounded in bytes and time, so the 413 is not lost to a reset.
@@ -231,4 +235,5 @@ public sealed class LanApi : ILanBackend
  public int SelectPort(int port){int want=12+port;return OnUi(()=>selectSource(want));}
  public bool SetVolume(int level){return OnUi(()=>setVolume(level));}
  public bool SetMute(bool mute){return OnUi(()=>setMute(mute));}
+ public string CommunityStatusJson()=>OnUi(()=>communityStatus==null?"{}":communityStatus());
 }

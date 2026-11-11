@@ -43,6 +43,10 @@ Guard that inverse against the exact saved after-state; do not erase a changed r
 
 Never invoke `security-manager-policy-reload --help` to query permissions. It is a script that ignores that argument and changes base policies. The development incident and its limits are recorded in the journal.
 
+## Managed Moonfin updates
+
+Community Apps adds a launcher-owned compatibility adapter for official Moonfin packages. It preserves the guide/channel bridge during package preparation and adds completion-based seek reporting where needed by the newer player. The Moonfin 2.10 to 3.0 upgrade and corrected playback controls passed hardware acceptance; see [Community Apps](COMMUNITY-APPS.md) for evidence and limits. The manual patcher below documents the original inspected 2.10 installation and deliberately retains its original-build guard.
+
 ## Prepare the Moonfin patch locally
 
 The patcher accepts only the inspected original Moonfin 2.10.0 bundle SHA256:

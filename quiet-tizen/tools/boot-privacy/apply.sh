@@ -28,3 +28,14 @@ chmod 600 "$R/last-boot.txt"
 echo 'uid=0 four-blocks-applied' > /tmp/quiet-privacy-applied
 chmod 644 /tmp/quiet-privacy-applied
 chsmack -a _ /tmp/quiet-privacy-applied
+# Optional playback component, explicitly installed and enabled by the owner.
+# Its failure must not stop privacy restoration or the management bridge.
+W=/opt/usr/share/quietthings-web-playback
+secure_addon() {
+ test ! -L "$1" && test "$(stat -c %u "$1")" = 0 || return 1
+ mode=$(stat -c %a "$1")
+ test "$((0$mode & 022))" -eq 0
+}
+if test -f "$W/enabled" && test -f "$W/start-service.sh" && secure_addon "$W" && secure_addon "$W/start-service.sh" && secure_addon "$W/enabled";then
+ cat "$W/start-service.sh" | /bin/sh >> "$W/start.log" 2>&1 || true
+fi

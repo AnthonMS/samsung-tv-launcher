@@ -11,6 +11,7 @@
 *.db-*
 *.sqlite*
 *.pem
+!quiet-tizen/launcher/assets/community-catalog.pem
 *.key
 *.token
 *.log

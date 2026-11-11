@@ -167,9 +167,9 @@ public sealed partial class QuietHome
  void PlayYouTube(string video){
   CancelVideoRetry();string id=youtubePrefs.Player=="tizentube"?"xvvl3S1TT1.TizenTubeStandalone":"9Ur5IzDKqV.TizenYouTube";
   bool native=library.Find(app=>app.Id==id)?.NativeVideoPayload==true;
+  if(native&&TryPlayCobaltVideo(id,YouTubeFeed.Payload(video,youtubePrefs.Player,true)))return;
   bool running=false;if(!native)try{running=ApplicationManager.IsRunning(id);}catch{running=true;}
-  // Native Cobalt consumes a plain video query on both cold and warm launches.
-  // Only the legacy web wrapper reads JSON args and may need a retry.
+  // Preserve the original launch path when the optional companion is disabled.
   string payload=YouTubeFeed.Payload(video,youtubePrefs.Player,native);Launch(id,null,payload);
   if(native||running)return;
   videoRetry=new CancellationTokenSource();var ct=videoRetry.Token;

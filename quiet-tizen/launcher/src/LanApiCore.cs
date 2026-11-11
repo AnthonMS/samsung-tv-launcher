@@ -37,6 +37,8 @@ public sealed class LanResponse
  public LanResponse(int code, string json) { Code = code; Json = json; }
 }
 
+public interface ILanCommunityStatus { string CommunityStatusJson(); }
+
 public sealed class LanRateLimiter
 {
  readonly int max; long windowStart = long.MinValue; int count;
@@ -199,6 +201,7 @@ public static class LanApiCore
   if (rq.ContentLength > MaxBody) return Fail(413, "body too large");
   string path = rq.Path; int q = path.IndexOf('?'); if (q >= 0) path = path.Substring(0, q);
   string m = rq.Method;
+  if (path == "/community/status" && b is ILanCommunityStatus store) return m != "GET" ? Fail(405,"method not allowed") : new LanResponse(200,store.CommunityStatusJson());
   if (path == "/health") return m != "GET" ? Fail(405, "method not allowed") : Health(b);
   if (path == "/state") return m != "GET" ? Fail(405, "method not allowed") : State(b);
   if (path.StartsWith("/hdmi/"))

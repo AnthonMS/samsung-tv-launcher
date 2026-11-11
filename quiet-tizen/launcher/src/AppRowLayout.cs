@@ -12,7 +12,7 @@ public sealed class AppRowLayout
  {
   if(!File.Exists(path)){
    var initial=new AppRowLayout();
-   foreach(var app in catalog)if(!app.Utility){initial.Order.Add(app.Id);if(initial.Ids.Count<6||app.SourceType.HasValue)initial.Ids.Add(app.Id);}
+   foreach(var app in catalog)if(!app.Utility){initial.Order.Add(app.Id);if(initial.Ids.Count<6||app.SourceType.HasValue||app.DefaultDock)initial.Ids.Add(app.Id);}
    return initial;
   }
   var saved=JsonSerializer.Deserialize<AppRowLayout>(File.ReadAllText(path));
@@ -28,7 +28,7 @@ public sealed class AppRowLayout
   foreach(var app in catalog)if(!app.Utility&&!clean.Order.Contains(app.Id)){
    clean.Order.Add(app.Id);
    // New inputs become available once; an already-known hidden input stays hidden.
-   if(app.SourceType.HasValue&&!clean.Ids.Contains(app.Id))clean.Ids.Add(app.Id);
+   if((app.SourceType.HasValue||app.DefaultDock)&&!clean.Ids.Contains(app.Id))clean.Ids.Add(app.Id);
   }
   clean.SyncVisibleOrder();
   return clean;

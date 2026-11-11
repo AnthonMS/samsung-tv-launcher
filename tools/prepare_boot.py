@@ -17,7 +17,7 @@ def main():
  (res/'passwd').write_bytes(b'owner:x:0:0:owner:/home/owner:/bin/sh\n')
  shutil.copy2(Q/'.local/build/payloads/SamsungTvArchiveRoot.dll',res/'SamsungTvArchiveRoot.dll')
  (res/'SamsungTvArchiveRoot.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net6.0','framework':{'name':'Microsoft.NETCore.App','version':'6.0.0'},'rollForward':'Major'}}),encoding='ascii')
- data=(Q/'tools/boot-privacy/apply.sh').read_bytes();archive=res/(PKG+'.tar.gz')
+ data=(Q/'tools/boot-privacy/apply.sh').read_text(encoding='utf-8-sig').encode('utf-8');archive=res/(PKG+'.tar.gz')
  with tarfile.open(archive,'w:gz') as t:
   m=tarfile.TarInfo('launch.sh');m.size=len(data);m.mode=0o600;t.addfile(m,io.BytesIO(data))
  sig=Path(str(archive)+'.signature');cmd(a.openssl,'dgst','-sha256','-sign',key,'-out',sig,archive);cmd(a.openssl,'dgst','-sha256','-verify',pub,'-signature',sig,archive)

@@ -71,3 +71,31 @@ The observed root policy finished about fourteen seconds after the boot helper s
 ## Repository consolidation
 
 The working tree, private evidence and external root toolkit were moved to the new Samsung project folder. The pre-existing public web-launcher history was preserved; the separate quiet-tizen Git database and root-toolkit checkout remain private. Reusable transport, package-building tools and manuals replace dependencies on personal absolute paths. Raw captures/credentials/proprietary files are not published. New publication uses the owner's GitHub identity with no co-author trailer.
+
+## Local Home Assistant playback extension, November 2026
+
+The existing digital remote did not provide reliable playback metadata across apps. An optional companion now runs beside the unchanged QuietThings v1 API inside Quiet Home. HA uses a modified integration and the existing living-room universal player/dashboard. Local Jellyfin session selection serves Moonfin/Jellyfin; a protected root inspector bridge serves Twitch/KickTV; an app-local Cobalt proxy/page observer serves ordinary YouTube and TizenTube. App-specific observations, foreground checks and expiring player/document ownership prevent stale metadata and controls from crossing app switches.
+
+Real hardware checks passed the controls listed in HOME-ASSISTANT.md for all six apps. The custom remote remaps use the same managed launch path as dock tiles. Twitch lacks a stream title, KickTV exposes a channel identifier, and their no-player observations still lose idle status. Those extraction gaps are unfinished, not proven impossible. Live seek/finite duration/stop are not advertised. Confirmed empty Cobalt menus now preserve the correct app name and report idle. Dashboard progress is read-only timestamp interpolation, not a sample every second or a draggable seek control.
+
+Several practical failures shaped the implementation: HA refresh-request cooldown delayed resume feedback; native Cobalt lacked the attempted production inspector path; shared proxy workers needed exact recycling; active Cobalt could retain Samsung's generic loader; cached HTML could replay retired observer capabilities; and app-context SMACK labels mattered when selecting the optional signed startup resources. Narrow fixes retained the original API contract, root recovery pair, account data, remote grabs and security framework. See the current technical guide and QuietThings experimental/playback documentation for the accepted scope and source map.
+
+## Home startup policy repair, 10 November 2026
+
+Owner review found power-on opening the input viewer while Home still worked. Main-operation and home selectors were correct. Changing startup_appid alone failed a controlled reboot. Samsung's separate db/menu/smart_hub/ontvsetting/auto_start Int32 policy was disabled. Enabling it and restoring the native startup selector passed the next full boot and input-to-Home wake readbacks. The repair changed settings, not the launcher binary; the legacy first-screen value was left untouched. Backups and a guarded policy inverse are separate from the playback inverse.
+
+The owner was unavailable for physical confirmation, so final startup acceptance uses actual foreground, stock power and HA state. HA deep-standby wake remains a separate limitation: direct Samsung wake was intermittent and one QuietThings request was skipped while its entity was unavailable. Repeated PC Wake-on-LAN recovered the device for final checks. Do not describe the startup repair as a guaranteed HA wake fix.
+
+Upstream PR1 is closed, and the owner requires days of daily testing before further PR work. The full implementation requires custom TV runtime components plus the modified integration; it is not an HA-only upgrade or a generally released installer. General fixes/optional protocol support may be considered separately later. This documentation update made no device/runtime changes and did not rerun the recorded test suites.
+
+## 2026-11-10 - Twitch and KickTV broadcast titles
+
+Added channel-matched Twitch player headings and bounded Kick channel-metadata lookup for real broadcast titles. Kick title lookup uses its normal HTTPS API without additional credentials; controls stay local. Confirmed menus now report idle and clear old media. Actual two-channel tests per app passed HA title, pause/resume and menu clearing. Initial titles can take a subsequent poll. Existing dedicated QuietThings entity exposes app_name/app_id/media_title and playing/paused/idle; dashboard already reads it. Managed dock/remap launches remain required and no finite live seek is advertised.
+
+131 playback checks, 21 bridge checks, 22 Python HTTP/lifecycle tests, context/probe and Cobalt regressions passed; launcher/bridge builds had zero warnings/errors. No fresh full reboot or HA restart for this title update. Updated technical/writer documentation and retained guarded recovery. No commits, pushes or PR changes; daily-use testing hold remains.
+
+## 2026-11-10 - Native Community Apps development release
+
+Added Community Apps inside Quiet Home Settings and a Samsung Apps dock entry, with on-TV source entry, dynamic installed apps and an in-process signer/localhost installer. No separate store app or broad installation relay is required. Package identity/source checks preserve existing author identity and block ordinary updates to the installed customized media packages. Only the MIT tizen-sdb signature subset was reused, with license and provenance.
+
+110 Community Apps checks, 315 original API checks, existing catalog/media/remote tests and a zero-warning launcher build passed. Actual TV checks covered signed catalog/profile loading, fresh clock installation, same-version reinstall with retained data, GitHub/signed-source lifecycle, dock access and official store launch. The final build passed full reboot and another native installation. Test app and temporary staging were removed; guarded recovery and private profiles were retained. Owner visual/typing acceptance and broader package/different-version upgrade coverage remain pending. See COMMUNITY-APPS.md. The reported HA wake-state failure remains separate and unresolved. No commits, pushes or PR changes.

@@ -15,6 +15,9 @@ public sealed class LibraryApp
  public int Height {get;set;}
  public float[] Crop {get;set;}
  public bool Utility {get;set;}
+ public bool GeneratedIcon {get;set;}
+ public bool Discovered {get;set;}
+ public bool DefaultDock {get;set;}
  public int? SourceType {get;set;}
  public int Port {get;set;}
  public bool NativeVideoPayload {get;set;}

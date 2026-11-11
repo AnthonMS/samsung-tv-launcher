@@ -6,10 +6,15 @@ The current launcher is a fork of [quiet-tizen](https://github.com/jss8649/quiet
 
 ## Read this first
 
+**Installing with an AI assistant? Start with the [AI installation guide](docs/AI-INSTALLATION.md).** It includes a ready-to-paste prompt, both source repositories, staged setup, compatibility checks and recovery requirements for your own TV.
+
 | Guide | Purpose |
 | --- | --- |
 | [Manual installation](docs/MANUAL.md) | Prerequisites, inventory, root transport, backups, build, installation and Home assignment |
 | [Media and daily use](docs/MEDIA.md) | Dock editing, clock/theme, YouTube sign-in, Jellyfin Quick Connect and playback |
+| [Home Assistant and playback](docs/HOME-ASSISTANT.md) | Current six-app development support, custom TV components, dashboard behavior and limits |
+| [Community Apps and Samsung Apps](docs/COMMUNITY-APPS.md) | Native third-party app browsing, installation, sources, signing and update limits |
+| [TV notifications](docs/NOTIFICATIONS.md) | Silent HA camera notices, remote buttons, settings and action events |
 | [Remote buttons](docs/REMOTE.md) | Scoped permission, four branded buttons, Moonfin guide and channel rocker |
 | [Privacy and boot persistence](docs/PRIVACY.md) | Exact 47-component profile, service markers, boot root, token bridge and verification |
 | [Recovery](docs/RECOVERY.md) | Undo each layer without replacing live databases with stale copies |
@@ -42,6 +47,8 @@ The owner tested media playback and responsiveness incrementally. Channel select
 - Configurable Netflix, TV Plus, Disney+ and Prime Video buttons across apps.
 - Moonfin channel Up/Down with wraparound and guide on the middle channel press.
 - Optional TV-only startup root and automatic privacy-mask reapplication.
+- Community Apps in Settings for compatible third-party packages and on-TV sources, plus Samsung Apps in the dock. Checked adapters preserve Moonfin/TizenTube customizations during managed updates, with package/data recovery on detected failure.
+- Local HA playback information and supported controls across six tested apps, plus silent actionable image/GIF/live-camera notifications.
 
 ## Layout
 
@@ -71,4 +78,4 @@ Known ACR and voice components are disabled, with persistent opt-outs and automa
 
 ## Home Assistant development
 
-The codex/quietthings-playback branch includes the original QuietThings local API and an optional playback companion. The development build is installed on the tested Q60C: Moonfin state/progress, play/pause, dashboard integration and recovery after a power cut have passed live checks. Other-app playback providers, seek/stop and controlled standby tests remain unfinished. See [Home Assistant development](docs/HOME-ASSISTANT.md) for the exact scope and [the QuietThings draft contribution](https://github.com/magnetgrouplabs/QuietThings/pull/1) for upstream review.
+The codex/quietthings-playback working tree includes the original QuietThings local API and an optional playback companion. The installed Q60C development setup has passed stated playback checks for Moonfin, Jellyfin, YouTube, TizenTube, Twitch and KickTV, including live stream titles and confirmed menu status. VOD seek/stop support depends on the provider, and live apps retain managed-launch and metadata-source limits. It includes additional TV-side components, a modified HA integration and a personal dashboard. See [current Home Assistant support and limits](docs/HOME-ASSISTANT.md), including the startup-policy repair and remaining HA wake caveat. [Upstream PR1](https://github.com/magnetgrouplabs/QuietThings/pull/1) is closed while the owner tests daily use; this stack is not an upstream release.

@@ -39,6 +39,10 @@ def main():
         destination = ROOT / ".local/package"
         destination.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / ".local/build/Home/BixbyPromotion.dll", destination / "BixbyPromotion.dll")
+        # App-local signing dependencies are required on the TV's .NET 6 runtime.
+        for name in ("BixbyPromotion.deps.json", "System.Security.Cryptography.Xml.dll",
+                     "System.Security.Cryptography.Pkcs.dll", "System.Formats.Asn1.dll"):
+            shutil.copyfile(ROOT / ".local/build/Home" / name, destination / name)
         shutil.copyfile(ROOT / ".local/build/QuickLaunch/QuickLaunch.dll", destination / "QuickLaunch.dll")
         shutil.copyfile(ROOT / ".local/build/Probe/Probe.dll", destination / "Probe.dll")
         assets = destination / "quiet-home"
