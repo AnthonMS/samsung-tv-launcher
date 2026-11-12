@@ -1,6 +1,6 @@
 # Local Home Assistant control and playback
 
-Status: 11 November 2026. Installed development setup on one inspected Q60C, Tizen 9, firmware 2220.4 and .NET 6.0.9. Six apps passed the stated hardware checks. This requires a customized launcher, a modified QuietThings HA integration and additional TV components. It is not an unmodified upstream installation or a universal Samsung playback API.
+Status: 12 November 2026. Installed development setup on one inspected Q60C, Tizen 9, firmware 2220.4 and .NET 6.0.9. Six apps passed the stated hardware checks. This requires a customized launcher, a modified QuietThings HA integration and additional TV components. It is not an unmodified upstream installation or a universal Samsung playback API.
 
 ## What changed
 
@@ -159,4 +159,6 @@ A longer standby exposed a second failure after the native power-state fix. HA s
 
 Volume write/readback now both use QuietThings. Previously, the universal entity still read Samsung's volume attributes while Samsung reported stale off and omitted those attributes. The native API and QuietThings already had the correct value. Moving the slider's authority and commands together fixes the empty readback without guessing volume from writes.
 
-The previous implementation was reproduced as unavailable after roughly 80 seconds, with an actual ignored wake request. After the fix, the same sleeping TV woke from the dashboard toggle without a physical remote. Actual YouTube volume changes 10% to11% to12% to10% read back on both entities; ten captured HA state events contained no playback interruption/unavailable state, and position continued. All194HA tests passed on each supported Core. No TV binaries, pairing, accounts, remote remaps or privacy settings changed. These bounded tests do not certify every overnight/router/firmware wake condition.
+The previous implementation was reproduced as unavailable after roughly 80 seconds, with an actual ignored wake request. After the fix, the same sleeping TV woke from the dashboard toggle without a physical remote. Actual YouTube volume changes 10% to 11% to 12% to 10% read back on both entities; ten captured HA state events contained no playback interruption/unavailable state, and position continued. All 194 HA tests passed on each supported Core. No TV binaries, pairing, accounts, remote remaps or privacy settings changed. These bounded tests do not certify every overnight/router/firmware wake condition.
+
+A second three-minute standby cycle without an HA restart also passed the same universal toggle. An independent remote volume-up key subsequently changed both entities from 10% to 11% through actual polling; the original 10% was restored.
