@@ -36,7 +36,7 @@ flowchart TD
     Bootstrap[Existing TV-local root bootstrap] --> Bridge
 ```
 
-The original QuietThings LanApi.cs and LanApiCore.cs remain unchanged on port 18765. The optional companion uses port 18766, its own extension version and authenticated status/control endpoints. Setting the optional playback port to zero in HA disables it and preserves original behavior.
+The original QuietThings routes remain on port 18765, with optional authenticated native `/power` and read-only maintenance status additions. The optional companion uses port 18766, its own extension version and authenticated status/control endpoints. Setting the optional playback port to zero in HA disables it and preserves original behavior.
 
 The companion runs inside the launcher. Home.HomeAssistant.cs supplies foreground, local account and route callbacks and registers providers. The additional root bridge is a separate service started after the existing TV-local boot-root chain. The one-shot boot helper is not itself a permanent media collector. Optional signed startup resources retain the original recovery pair and fall back if the optional pair is missing or invalid.
 
@@ -70,7 +70,7 @@ Active Cobalt may run behind Samsung's generic app-defined-loader after boot. At
 
 ## HA entities and dashboard
 
-The living-room setup keeps a stable QuietThings playback entity and the existing universal player as dashboard facade. QuietThings now supplies power state and power commands; Samsung retains volume and source control. Supported popup play/pause targets QuietThings; unknown playback keeps explicit Samsung fallback. The universal player's explicitly configured Samsung transport routes are not all replaced by companion commands.
+The living-room setup keeps a stable QuietThings playback entity and the existing universal player as dashboard facade. QuietThings now supplies power state, power commands and volume/mute commands/readback; Samsung retains source control and existing remote keys. Supported popup play/pause targets QuietThings; unknown playback keeps explicit Samsung fallback. The universal player's explicitly configured Samsung transport routes are not all replaced by companion commands.
 
 Capabilities come from each current observation. Live streams do not acquire seek simply because a VOD provider supports it. After controls HA requests an immediate actual refresh, avoiding the earlier refresh-request cooldown that delayed resume feedback. Apps, server reporting and LAN latency still matter.
 
@@ -151,3 +151,12 @@ No hardware certification is claimed for arbitrary TVs/apps, actual client reins
 Settings, More settings, Home Assistant now provides persistent access, notification and action-button switches plus connection details. HA initiates the local connection; no hardcoded Home Assistant destination is stored in the launcher. Change the TV address and companion settings in the HA integration.
 
 The modified integration adds `quietthings.notify` and `quietthings.dismiss_notification`, camera snapshot preparation and short-lived `quietthings_notification_action` events. The TV uses a silent native corner overlay that automatically captures navigation and releases it on dismissal or timeout. See [TV notifications](NOTIFICATIONS.md) for service fields, examples, privacy, acceptance evidence and limits. The owner's separate HA package now contains the requested doorbell and Unlock Door callback automations; actual lock operations are excluded from development tests.
+
+
+## November 12: sleeping wake and volume readback correction
+
+A longer standby exposed a second failure after the native power-state fix. HA stopped invoking turn_on because the QuietThings media entity became unavailable after repeated sleeping-endpoint failures. The player now remains available as a local Wake-on-LAN command target. Power remains unknown when it cannot be observed; sensors and API-dependent controls retain their availability checks. Toggle checks fresh power and attempts wake for off/unknown. The living-room universal entity explicitly forwards toggle as well as turn_on/turn_off, avoiding HA's default unknown-to-turn_off behavior.
+
+Volume write/readback now both use QuietThings. Previously, the universal entity still read Samsung's volume attributes while Samsung reported stale off and omitted those attributes. The native API and QuietThings already had the correct value. Moving the slider's authority and commands together fixes the empty readback without guessing volume from writes.
+
+The previous implementation was reproduced as unavailable after roughly 80 seconds, with an actual ignored wake request. After the fix, the same sleeping TV woke from the dashboard toggle without a physical remote. Actual YouTube volume changes 10% to11% to12% to10% read back on both entities; ten captured HA state events contained no playback interruption/unavailable state, and position continued. All194HA tests passed on each supported Core. No TV binaries, pairing, accounts, remote remaps or privacy settings changed. These bounded tests do not certify every overnight/router/firmware wake condition.
